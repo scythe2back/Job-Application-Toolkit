@@ -4,14 +4,40 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Job Application Toolkit</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%237a1f2b'/%3E%3Cpath d='M10 7h8l5 5v13H10z' fill='%23fff'/%3E%3Cpath d='M13 19l2.6 2.6L20.5 16' fill='none' stroke='%237a1f2b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <header class="top">
-  <h1>Job<span> Application</span> Toolkit</h1>
+  <h1><svg class="logo" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--acc)"/><path d="M10 7h8l5 5v13H10z" fill="var(--on-acc)" opacity=".95"/><path d="M18 7v5h5" fill="none" stroke="var(--acc)" stroke-width="1.6" stroke-linejoin="round"/><path d="M13 19l2.6 2.6L20.5 16" fill="none" stroke="var(--acc)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="wm">Job<span> Application</span> Toolkit</span></h1>
   <nav class="tabs" id="tabs" aria-label="Sections"><button data-tab="resume" aria-current="page">Resume</button><button data-tab="cover">Cover letter</button><button data-tab="email">Email</button><button data-tab="tracker">Tracker</button><button data-tab="interview">Interview</button><button data-tab="ph">PH tools</button></nav>
+  <button class="help" data-go="guide" aria-label="Open the guide">Guide</button>
 </header>
-<main id="paneResume" data-view="edit">
+<main id="paneGuide" class="wide" hidden>
+  <div class="guide">
+    <div class="hero">
+      <svg viewBox="0 0 32 32" width="48" height="48" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--acc)"/><path d="M10 7h8l5 5v13H10z" fill="var(--on-acc)" opacity=".95"/><path d="M18 7v5h5" fill="none" stroke="var(--acc)" stroke-width="1.6" stroke-linejoin="round"/><path d="M13 19l2.6 2.6L20.5 16" fill="none" stroke="var(--acc)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <h2>Job Application Toolkit</h2>
+      <p>Make an ATS-friendly resume or CV, a cover letter and application emails, then track your applications and practice for interviews. Everything runs in your browser.</p>
+      <button class="pri big" data-go="resume">Start building</button>
+    </div>
+    <ol class="tiles">
+      <li><button data-go="resume"><b>Resume</b><span>Pick a style, fill in sections, export Word or PDF.</span></button></li>
+      <li><button data-go="cover"><b>Cover letter</b><span>Written from your resume and one job target.</span></button></li>
+      <li><button data-go="email"><b>Email</b><span>Apply, follow up, negotiate, resign and more.</span></button></li>
+      <li><button data-go="tracker"><b>Tracker</b><span>Log applications and see who to follow up.</span></button></li>
+      <li><button data-go="interview"><b>Interview</b><span>Questions, STAR answer builder, practice timer.</span></button></li>
+      <li><button data-go="ph"><b>PH tools</b><span>Declaration wording and a CS Form 212 worksheet.</span></button></li>
+    </ol>
+    <ul class="notes">
+      <li>The sample details are fictional. Replace them with your own.</li>
+      <li>Your data stays in this browser. Export a copy to keep it.</li>
+      <li>AI features are optional and ask before they run.</li>
+    </ul>
+  </div>
+</main>
+<main id="paneResume" data-view="edit" hidden>
   <div class="mtoggle" role="group" aria-label="View"><button data-view="edit" aria-pressed="true">Edit</button><button data-view="preview" aria-pressed="false">Preview</button></div>
   <div id="form"></div>
   <div class="side">

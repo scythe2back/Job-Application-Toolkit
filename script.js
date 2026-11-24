@@ -8,24 +8,25 @@ const DIMS={letter:{w:816,h:1056,tw:12240,th:15840},a4:{w:794,h:1123,tw:11906,th
 const KINDS={
   education:{org:'School / university',loc:'Location',role:'Degree, strand or course',dates:'Dates (e.g., June 2020 – May 2024)',bul:'Details, one per line (honors, GPA, thesis, coursework)'},
   experience:{org:'Company / organization',loc:'Location (City)',role:'Position title',dates:'Dates (e.g., June 2024 – Present)',bul:'Accomplishments, one per line (start with an action verb)'},
+  projects:{org:'Project name',loc:'Link or context (optional)',role:'Your role and tech stack',dates:'Dates (optional)',bul:'What you built and the result, one per line (start with an action verb)'},
   leadership:{org:'Organization',loc:'Location',role:'Role',dates:'Dates',bul:'Accomplishments, one per line'},
   trainings:{org:'Organizer / provider',loc:'Venue (or Online)',role:'Seminar / training title',dates:'Date(s)',bul:'Notes, one per line (optional)'},
   licenses:{org:'Issuing body (e.g., Civil Service Commission, PRC)',loc:'Place of exam / issuance',role:'Certification, eligibility or license',dates:'Date',bul:'Details, one per line (rating, license no. if you wish)'},
   refs:{org:'Name',loc:'Contact (mobile / email)',role:'Position & organization',dates:'',bul:''}
 };
 const blank=k=>k==='skills'?{label:'',items:''}:{org:'',loc:'',title:'',dates:'',bullets:''};
-const LISTS=['education','experience','leadership','trainings','licenses','refs','skills'];
+const LISTS=['education','experience','projects','leadership','trainings','licenses','refs','skills'];
 
 const SAMPLE={
   preset:'ph',paper:'letter',order:'edu',refsMode:'list',
   name:'Maria Clara Santos',address:'Blk 5 Lot 12, Mabini Street, Brgy. Poblacion, Makati City, Metro Manila 1210',phone:'+63 917 123 4567',email:'maria.santos@email.com',linkedin:'linkedin.com/in/mariasantos',website:'',
   objective:'Entry-level cybersecurity technician with hands-on SOC monitoring and incident response experience.',
   education:[
-    {org:'Metro Manila State University',loc:'Makati City',title:'Bachelor of Science in Information Technology, Major in Network and Information Security',dates:'June 2020 – May 2024',bullets:'Graduated Cum Laude; Academic Scholar (8 semesters)\nThesis: Anomaly-Based Intrusion Detection for Small-Office Networks'},
+    {org:'Metro Manila State University',loc:'Makati City',title:'Bachelor of Science in Information Technology, Major in Network and Information Security',dates:'June 2020 – May 2024',bullets:'Cum Laude; Academic Scholar. Thesis: Anomaly-Based Intrusion Detection for Small-Office Networks'},
     {org:'Poblacion Senior High School',loc:'Makati City',title:'Senior High School, Information and Communications Technology (ICT) Strand, With Honors',dates:'June 2018 – March 2020',bullets:''}],
   experience:[
-    {org:'Sample Managed Security Services, Inc.',loc:'Taguig City',title:'Junior SOC Analyst',dates:'June 2024 – Present',bullets:'Triaged 60+ alerts per shift in Splunk, escalating confirmed incidents within a 15-minute SLA\nInvestigated phishing and malware cases with playbooks, cutting containment time by 30%\nTuned 25 SIEM detection rules, reducing false positives by 40%'},
-    {org:'Sample Corporation, IT Department',loc:'Makati City',title:'IT Security Intern',dates:'January 2024 – April 2024',bullets:'Hardened 40 Windows workstations to CIS benchmarks and applied monthly patches at 98% compliance'}],
+    {org:'Sample Managed Security Services, Inc.',loc:'Taguig City',title:'Junior SOC Analyst',dates:'June 2024 – Present',bullets:'Triaged 60+ alerts per shift in Splunk, escalating confirmed incidents within a 15-minute SLA\nInvestigated phishing and malware cases with playbooks, cutting containment time by 30%\nTuned 25 SIEM detection rules, reducing false positives by 40%'}],
+  projects:[{org:'Home SOC Lab',loc:'github.com/mariasantos/home-soc',title:'Builder; Splunk, Zeek, Suricata, pfSense',dates:'2025',bullets:'Built a virtual SOC lab that ingests firewall and IDS logs and alerts on 15 attack scenarios'}],
   leadershipTitle:'Leadership & Activities',
   leadership:[{org:'Cybersecurity Society',loc:'Metro Manila State University',title:'Vice President, Technical Affairs',dates:'June 2022 – March 2023',bullets:'Led a 6-member Capture the Flag team to 3rd place among 30 university teams'}],
   skills:[{label:'Security Tools',items:'Splunk, Wireshark, Nmap, Nessus, Burp Suite, Microsoft Defender'},{label:'Systems & Networking',items:'Windows, Linux (Kali, Ubuntu), Active Directory, TCP/IP, firewalls, VLANs'},{label:'Frameworks & Scripting',items:'NIST CSF, MITRE ATT&CK, ISO 27001 (basics), Python, Bash, SQL'}],
@@ -34,7 +35,30 @@ const SAMPLE={
   dob:'March 4, 2002',civil:'Single',citizen:'Filipino',
   refs:[{org:'Engr. Juan Dela Cruz',loc:'+63 900 000 0000',title:'SOC Manager, Sample Managed Security Services, Inc.',dates:'',bullets:''}]
 };
-const EMPTY={preset:'ph',paper:'letter',order:'edu',refsMode:'request',declaration:'none',name:'',address:'',phone:'',email:'',linkedin:'',website:'',objective:'',dob:'',civil:'',citizen:'',leadershipTitle:'Leadership & Activities'};
+const SAMPLE_CV={
+  preset:'cv',paper:'letter',order:'edu',refsMode:'list',declaration:'none',
+  name:'Maria Clara Santos',address:'Blk 5 Lot 12, Mabini Street, Brgy. Poblacion, Makati City, Metro Manila 1210',phone:'+63 917 123 4567',email:'maria.santos@email.com',linkedin:'linkedin.com/in/mariasantos',website:'',
+  objective:'Cybersecurity educator and researcher. Interests: network intrusion detection, security operations, and hands-on cybersecurity education.',
+  education:[
+    {org:'Metro Manila State University',loc:'Makati City',title:'Master of Science in Information Technology (in progress)',dates:'August 2024 – Present',bullets:'Thesis: Anomaly-Based Intrusion Detection for Small-Office Networks\nAdviser: Dr. Elena Cruz'},
+    {org:'Metro Manila State University',loc:'Makati City',title:'Bachelor of Science in Information Technology, Major in Network and Information Security',dates:'June 2020 – May 2024',bullets:'Graduated Cum Laude; Academic Scholar (8 semesters)'}],
+  experience:[
+    {org:'Metro Manila State University, College of Computing',loc:'Makati City',title:'Part-Time Lecturer, Information Assurance and Security',dates:'June 2025 – Present',bullets:'Teach two sections (80 students) of Network Security and Introduction to Cybersecurity\nDesigned a hands-on lab series using Wireshark and Splunk that raised average lab scores by 12%\nMentor four undergraduate capstone teams on security design and testing'},
+    {org:'Sample Managed Security Services, Inc.',loc:'Taguig City',title:'Junior SOC Analyst',dates:'June 2024 – May 2025',bullets:'Triaged 60+ alerts per shift in Splunk, escalating confirmed incidents within a 15-minute SLA\nTuned 25 SIEM detection rules, reducing false positives by 40%'}],
+  projects:[{org:'Home SOC Lab',loc:'github.com/mariasantos/home-soc',title:'Builder; Splunk, Zeek, Suricata, pfSense',dates:'2025',bullets:'Built a virtual SOC lab used as a teaching demo for 80 students in Network Security'}],
+  leadershipTitle:'Research Experience',
+  leadership:[{org:'Network Security Laboratory, Metro Manila State University',loc:'Makati City',title:'Graduate Research Assistant',dates:'August 2024 – Present',bullets:'Built and labeled a dataset of 120,000 network flows for intrusion detection experiments\nEvaluated three anomaly detection models and reported results to a six-member lab group'}],
+  publications:'Santos, M. C., & Cruz, E. (2025). Anomaly-based intrusion detection for small-office networks. Proceedings of the Sample National Conference on Computing, 112–119.\nSantos, M. C. (2024). A student guide to security operations center workflows. Sample Journal of Computing Education, 8(2), 41–50.',
+  presentations:'Santos, M. C. (2025, February). Lightweight intrusion detection for small offices. Sample Philippine Computing Conference, Manila.\nSantos, M. C. (2024, October). From classroom to SOC: skills gaps for new analysts. Sample Cybersecurity Educators Forum, Online.',
+  grants:'Graduate Research Grant, Metro Manila State University (2025)\nAcademic Scholar, College of Computing (2020–2024)\nBest Undergraduate Thesis, Department of Information Technology (2024)',
+  service:'Reviewer, Sample Student Research Symposium (2025)\nMember, Sample Computing Society of the Philippines (2022 – Present)',
+  skills:[{label:'Teaching',items:'Course and lab design, active learning, rubric-based assessment, Moodle'},{label:'Research',items:'Study design, Python, scikit-learn, Wireshark, Zeek, LaTeX, Zotero'}],
+  trainings:[{org:'Sample Teaching Institute',loc:'Online',title:'Outcomes-Based Education Workshop',dates:'July 2025',bullets:''}],
+  licenses:[{org:'CompTIA',loc:'Online',title:'Security+ (SY0-701)',dates:'Expected January 2027',bullets:''}],
+  dob:'',civil:'',citizen:'',
+  refs:[{org:'Dr. Elena Cruz',loc:'elena.cruz@sample.edu.example',title:'Professor, College of Computing, Metro Manila State University',dates:'',bullets:''},{org:'Engr. Juan Dela Cruz',loc:'+63 900 000 0000',title:'SOC Manager, Sample Managed Security Services, Inc.',dates:'',bullets:''}]
+};
+const EMPTY={preset:'ph',paper:'letter',order:'edu',refsMode:'request',declaration:'none',name:'',address:'',phone:'',email:'',linkedin:'',website:'',objective:'',dob:'',civil:'',citizen:'',publications:'',presentations:'',grants:'',service:'',leadershipTitle:'Leadership & Activities'};
 LISTS.forEach(k=>{EMPTY[k]=[blank(k)];});
 const clone=o=>JSON.parse(JSON.stringify(o));
 
@@ -73,10 +97,13 @@ function renderForm(){
     ${F('Full name','name',S.name,{full:1})}${F('Address (street, barangay, city, province, ZIP)','address',S.address,{full:1})}
     ${F('Mobile (+63 9XX XXX XXXX)','phone',S.phone)}${F('Email','email',S.email)}
     ${F('LinkedIn (plain text, optional)','linkedin',S.linkedin)}${F('Website / portfolio (optional)','website',S.website)}</div></section>`+
-  (S.preset==='us'?'':`<section class="card"><h2>Career objective</h2><p class="hint">Optional, common on Philippine resumes. One or two sentences, no pronouns.</p>${F('Objective','objective',S.objective,{area:1,rows:3,full:1}).replace('class="f full"','class="f full" style="display:flex"')}</section>`)+
-  listCard('education','Education','List tertiary first, then senior high or secondary, in reverse-chronological order. Include honors.')+
-  listCard('experience','Experience','Reverse-chronological. Each bullet: action verb + what you did + measurable result. One or two lines each.')+
-  listCard('leadership','Leadership &amp; activities','Optional. Student orgs, volunteering, projects.',F('Section heading','leadershipTitle',S.leadershipTitle,{full:1}).replace('class="f full"','class="f full" style="margin-bottom:10px"'))+
+  (S.preset==='cv'?`<section class="card"><h2>Research interests</h2><p class="hint">One or two sentences on your research areas and teaching focus.</p>${F('Research interests','objective',S.objective,{area:1,rows:3,full:1}).replace('class="f full"','class="f full" style="display:flex"')}</section>`:'')+
+  (S.preset!=='ph'?'':`<section class="card"><h2>Career objective</h2><p class="hint">Optional, common on Philippine resumes. One or two sentences, no pronouns.</p>${F('Objective','objective',S.objective,{area:1,rows:3,full:1}).replace('class="f full"','class="f full" style="display:flex"')}</section>`)+
+  listCard('education','Education','Most recent first. Include honors.')+
+  listCard('experience','Experience','Most recent first. Bullet = action verb + what you did + result.')+
+  listCard('projects','Projects','Labs, capstones, CTFs, personal builds. Name the tools you used.')+
+  listCard('leadership',S.preset==='cv'?'Research experience':'Leadership &amp; activities','Optional. Student orgs, volunteering, projects.',F('Section heading','leadershipTitle',S.leadershipTitle,{full:1}).replace('class="f full"','class="f full" style="margin-bottom:10px"'))+
+  (S.preset==='cv'?[['publications','Publications','Most recent first, one citation per line, in the style your field uses (APA, IEEE).'],['presentations','Presentations','Conference talks and posters, one per line.'],['grants','Grants, fellowships &amp; awards','One per line, with the year.'],['service','Professional service &amp; memberships','Reviewing, committees and societies, one per line.']].map(x=>`<section class="card"><h2>${x[1]}</h2><p class="hint">${x[2]}</p>${F('Entries (one per line)',x[0],S[x[0]],{area:1,rows:5,full:1})}</section>`).join(''):'')+
   `<section class="card"><h2>Skills &amp; interests</h2><p class="hint">Label + comma-separated items, e.g. Technical: Excel, SQL.</p>`+
   S.skills.map((k,i)=>`<div class="entry"><div class="ehead"><strong>${esc(k.label||'Row '+(i+1))}</strong><span class="mini">
     <button data-act="up" data-k="skills" data-i="${i}" ${i===0?'disabled':''} aria-label="Move up">&uarr;</button>
@@ -86,7 +113,7 @@ function renderForm(){
   `<button data-act="add" data-k="skills">+ Add row</button></section>`+
   listCard('trainings','Seminars &amp; trainings','Optional. Relevant seminars, workshops and certifications.')+
   listCard('licenses','Certifications &amp; eligibilities','Optional. Security+, CCNA, Civil Service eligibility, PRC license and similar.')+
-  (S.preset==='us'?'':`<section class="card"><h2>Personal information</h2><p class="hint">Optional. Common on Philippine resumes; leave blank for US or international applications.</p><div class="grid">
+  (S.preset!=='ph'?'':`<section class="card"><h2>Personal information</h2><p class="hint">Optional. Common on Philippine resumes; leave blank for US or international applications.</p><div class="grid">
     ${F('Date of birth','dob',S.dob,{full:1})}${F('Civil status','civil',S.civil)}${F('Citizenship','citizen',S.citizen)}</div></section>`)+
   (S.preset==='us'?'':listCard('refs','References','',SEL('References section','refsMode',S.refsMode,[['list','List character references'],['request','"References available upon request."'],['none','Leave out']],1).replace('class="f full"','class="f full" style="margin-bottom:10px"')));
 }
@@ -113,7 +140,7 @@ $('#form').addEventListener('click',e=>{
 /* ---------- model shared by preview, docx, text ---------- */
 const bulletsOf=t=>(t||'').split('\n').map(s=>s.replace(/^\s*[-•*–]\s*/,'').trim()).filter(Boolean);
 function footerLines(d){
-  if(d.preset==='us')return[];
+  if(d.preset!=='ph')return[];
   const c='I hereby certify that the above information is true and correct to the best of my knowledge.';
   if(d.declaration==='certify')return[c];
   if(d.declaration==='consent')return[c+' I consent to the collection and processing of my personal data for recruitment purposes in accordance with the Data Privacy Act of 2012 (Republic Act No. 10173).'];
@@ -123,22 +150,28 @@ function model(d){
   const ent=a=>(a||[]).map(e=>({org:(e.org||'').trim(),loc:(e.loc||'').trim(),title:(e.title||'').trim(),dates:(e.dates||'').trim(),bullets:bulletsOf(e.bullets)})).filter(e=>e.org||e.title||e.bullets.length);
   const by={};
   const row=(label,items)=>({label:label,items:(items||'').trim()});
-  const us=d.preset==='us';
-  if(!us&&(d.objective||'').trim())by.objective={id:'objective',title:'Career Objective',skills:[row('',d.objective)]};
+  const cv=d.preset==='cv',us=d.preset!=='ph';
+  const txt=(id,title,str)=>{const b=bulletsOf(str);if(b.length)by[id]={id:id,title:title,entries:[{org:'',loc:'',title:'',dates:'',bullets:b}]};};
+  if(cv){if((d.objective||'').trim())by.objective={id:'objective',title:'Research Interests',skills:[row('',d.objective)]};}
+  else if(!us&&(d.objective||'').trim())by.objective={id:'objective',title:'Career Objective',skills:[row('',d.objective)]};
   const E=ent(d.education);if(E.length)by.education={id:'education',title:'Education',entries:E};
-  const X=ent(d.experience);if(X.length)by.experience={id:'experience',title:'Experience',entries:X};
+  const X=ent(d.experience);if(X.length)by.experience={id:'experience',title:cv?'Academic & Professional Experience':'Experience',entries:X};
+  const PJ=ent(d.projects);if(PJ.length)by.projects={id:'projects',title:'Projects',entries:PJ};
   const L=ent(d.leadership);if(L.length)by.leadership={id:'leadership',title:(d.leadershipTitle||'').trim()||'Leadership & Activities',entries:L};
   const K=(d.skills||[]).map(k=>row((k.label||'').trim(),k.items)).filter(k=>k.items);
-  if(K.length)by.skills={id:'skills',title:'Skills & Interests',skills:K};
-  const T=ent(d.trainings);if(T.length)by.trainings={id:'trainings',title:'Seminars & Trainings',entries:T};
-  const Li=ent(d.licenses);if(Li.length)by.licenses={id:'licenses',title:'Certifications & Eligibilities',entries:Li};
+  if(K.length)by.skills={id:'skills',title:cv?'Skills':'Skills & Interests',skills:K};
+  const T=ent(d.trainings);if(T.length)by.trainings={id:'trainings',title:cv?'Professional Development':'Seminars & Trainings',entries:T};
+  const Li=ent(d.licenses);if(Li.length)by.licenses={id:'licenses',title:cv?'Certifications & Licenses':'Certifications & Eligibilities',entries:Li};
   const P=[row('Date of Birth',d.dob),row('Civil Status',d.civil),row('Citizenship',d.citizen)].filter(k=>k.items);
   if(!us&&P.length){const one=P.map(k=>k.label+': '+k.items).join(' | ');
     by.personal={id:'personal',title:'Personal Information',skills:one.length<=95?[row('',one)]:P};}
-  if(us){/* Harvard format omits references */}
+  if(cv){txt('publications','Publications',d.publications);txt('presentations','Presentations',d.presentations);txt('grants','Grants, Fellowships & Awards',d.grants);txt('service','Professional Service & Memberships',d.service);
+    if(d.refsMode==='list'){const R=ent(d.refs);if(R.length)by.refs={id:'refs',title:'References',entries:R};}
+    else if(d.refsMode==='request')by.refs={id:'refs',title:'References',skills:[row('','Available upon request.')]};}
+  else if(us){/* Harvard format omits references */}
   else if(d.refsMode==='list'){const R=ent(d.refs);if(R.length)by.refs={id:'refs',title:'Character References',entries:R};}
   else if(d.refsMode==='request')by.refs={id:'refs',title:'References',skills:[row('','Available upon request.')]};
-  const order=(d.order==='exp'&&!us)?['objective','experience','education','leadership','skills','trainings','licenses','personal','refs']:['objective','education','experience','leadership','skills','trainings','licenses','personal','refs'];
+  const order=cv?['objective','education','experience','projects','leadership','publications','presentations','grants','trainings','licenses','service','skills','refs']:(d.order==='exp'&&!us)?['objective','experience','projects','education','leadership','skills','trainings','licenses','personal','refs']:['objective','education','experience','projects','leadership','skills','trainings','licenses','personal','refs'];
   return{name:(d.name||'').trim(),contact:[d.address,d.phone,d.email,d.linkedin,d.website].map(s=>(s||'').trim()).filter(Boolean),sections:order.map(id=>by[id]).filter(Boolean),footer:footerLines(d)};
 }
 
@@ -172,7 +205,7 @@ function renderPreview(M){
   paper.style.width=D.w+'px';paper.style.minHeight=D.h+'px';paper.style.height=full+'px';
   paper.style.transform='scale('+s+')';
   scaler.style.width=(D.w*s)+'px';scaler.style.height=(full*s)+'px';
-  const pg=$('#pgline');pg.style.top=(D.h-72)+'px';pg.className='pgline'+(contentH>D.h-144?' over':'');
+  const pg=$('#pgline');pg.style.top=(D.h-72)+'px';pg.className='pgline'+(contentH>D.h-144&&S.preset!=='cv'?' over':'');
 }
 window.addEventListener('resize',()=>refreshActive());
 
@@ -182,7 +215,7 @@ const PH_MOBILE=/^(\+?63|0)[\s-]?9\d{2}[\s-]?\d{3}[\s-]?\d{4}$/;
 const PH_LAND=/^(\+?63|0)?[\s-]?\(?\d{1,2}\)?[\s-]?\d{3,4}[\s-]?\d{4}$/;
 function runChecks(M,d){
   const out=[];const add=(l,t)=>out.push({l,t});
-  const ph=d.preset==='ph';
+  const ph=d.preset==='ph',cv=d.preset==='cv';
   let c=0;
   if(!M.name){add('bad','Add your name.');c++;}
   if(!(d.email||'').trim()){add('bad','Add an email address.');c++;}
@@ -194,9 +227,9 @@ function runChecks(M,d){
   if(!c)add('ok','Contact details complete (plain text, no icons).');
   const has=id=>M.sections.some(s=>s.id===id);
   if(!has('education'))add('bad','Education is empty.');
-  else if(!ph){const f=M.sections.find(s=>s.id!=='objective');add(f&&f.id==='education'?'ok':'warn',f&&f.id==='education'?'Education comes first, as in the Harvard format.':'Harvard format puts Education first for students and recent graduates.');}
+  else if(!ph&&!cv){const f=M.sections.find(s=>s.id!=='objective');add(f&&f.id==='education'?'ok':'warn',f&&f.id==='education'?'Education comes first, as in the Harvard format.':'Harvard format puts Education first for students and recent graduates.');}
   if(!has('experience'))add('warn','No Experience entries yet.');
-  const work=[];M.sections.forEach(s=>{if(s.id==='experience'||s.id==='leadership')s.entries.forEach(e=>e.bullets.forEach(b=>work.push(b)));});
+  const work=[];M.sections.forEach(s=>{if(s.id==='experience'||s.id==='leadership'||s.id==='projects')s.entries.forEach(e=>e.bullets.forEach(b=>work.push(b)));});
   if(work.length){
     const weak=work.filter(b=>WEAK.test(b)||/^[a-z]/.test(b)).length;
     add(weak?'warn':'ok',weak?`${weak} bullet(s) open weakly (pronouns, "responsible for", "worked on", lowercase). Start with an action verb such as Led, Built, Processed.`:'All bullets open with a strong, capitalized start.');
@@ -213,18 +246,21 @@ function runChecks(M,d){
   else if(dated.length)add('ok','Every education and experience entry is dated.');
   const hasPersonal=!!(d.dob||d.civil||d.citizen);
   if(ph&&!hasPersonal)add('warn','Optional: many Philippine employers expect date of birth, civil status and citizenship.');
-  if(!ph&&(hasPersonal||(d.objective||'').trim()||(d.refsMode==='list'&&(d.refs||[]).some(r=>(r.org||'').trim()))))add('ok','Harvard mode hides the objective, personal information and references, as Harvard-style resumes omit them.');
+  if(!ph&&!cv&&(hasPersonal||(d.objective||'').trim()||(d.refsMode==='list'&&(d.refs||[]).some(r=>(r.org||'').trim()))))add('ok','Harvard mode hides the objective, personal information and references, as Harvard-style resumes omit them.');
   if(ph&&d.refsMode==='none')add('warn','Consider character references or "References available upon request."');
   let pict=false;try{pict=/\p{Extended_Pictographic}/u.test(JSON.stringify(d));}catch(e){}
   if(pict)add('bad','Emoji or pictographs found. ATS parsers can drop or garble them.');
   if(M.name||M.sections.length){
     const lim=dims().h-144;
-    if(contentH>lim)add('bad',`Runs about ${Math.ceil((contentH-lim)/17)} line(s) past one page. One page is the norm for students and early-career applicants: trim older or weaker bullets.`);
+    if(cv){const n=Math.max(1,Math.ceil(contentH/lim));add('ok',`About ${n} page${n>1?'s':''}. Academic CVs have no page limit; keep the most relevant work first.`);}
+    else if(contentH>lim)add('bad',`Runs about ${Math.ceil((contentH-lim)/17)} line(s) past one page. One page is the norm for students and early-career applicants: trim older or weaker bullets.`);
     else add('ok','Fits on one page.');
   }
+  if(cv){const bl=['publications','presentations','grants'].filter(id=>!has(id));if(bl.length)add('warn','Academic CVs usually list '+bl.join(', ').replace(/,([^,]*)$/,' and$1')+'. Add them if you have any.');}
   return out;
 }
-function renderChecks(M){drawChecks('#checks',runChecks(M,S),'#chipR');}
+function renderChecks(M){drawChecks('#checks',runChecks(M,S),'#chipR');
+  if(S.preset==='cv'){const n=Math.max(1,Math.ceil(contentH/(dims().h-144))),c=$('#chipR');c.className='chip ok';c.textContent='About '+n+' page'+(n>1?'s':'');}}
 
 /* ---------- exports ---------- */
 function toText(M){
@@ -286,7 +322,7 @@ $('#bDocx').onclick=async()=>{
 };
 $('#bTxt').onclick=()=>saveFile(base()+'.txt',toText(model(S)));
 $('#bCopy').onclick=async()=>{try{await navigator.clipboard.writeText(toText(model(S)));toast('Resume text copied');}catch(e){toast('Copy was blocked in this view.');}};
-$('#bSample').onclick=()=>{activeV().data=clone(SAMPLE);syncS();renderForm();refresh();toast('Sample loaded');};
+$('#bSample').onclick=()=>{activeV().data=clone(S.preset==='cv'?SAMPLE_CV:SAMPLE);syncS();renderForm();refresh();toast('Sample loaded');};
 $('#bClear').onclick=()=>{activeV().data=clone(EMPTY);syncS();renderForm();refresh();};
 
 function refresh(){
@@ -311,7 +347,7 @@ function setIn(o,path,val){const k=path.split('.');for(let i=0;i<k.length-1;i++)
 
 const GF=(label,path,val,o)=>{o=o||{};const el=o.area?`<textarea data-d="${path}" rows="${o.rows||3}">${esc(val)}</textarea>`:`<input data-d="${path}" value="${esc(val)}" autocomplete="off">`;return `<label class="f ${o.full?'full':''}"><span>${esc(label)}</span>${el}</label>`;};
 const GS=(label,path,val,opts,full)=>`<label class="f ${full?'full':''}"><span>${esc(label)}</span><select data-d="${path}">${opts.map(o=>`<option value="${o[0]}"${o[0]===val?' selected':''}>${esc(o[1])}</option>`).join('')}</select></label>`;
-const jobCard=()=>`<section class="card"><h2>Job target</h2><p class="hint">Shared by the cover letter and the email. Your name and contact details come from the Resume tab.</p><div class="grid">
+const jobCard=()=>`<section class="card"><h2>Job target</h2><p class="hint">Shared by the cover letter, email and interview prep. Your contact details come from the Resume tab.</p><div class="grid">
   ${GF('Position applied for','job.position',D.job.position,{full:1})}${GF('Company','job.company',D.job.company,{full:1})}
   ${GF('Hiring manager (e.g., Ms. Ana Reyes)','job.recFull',D.job.recFull)}${GF('Their position','job.recPos',D.job.recPos)}
   ${GF('Company address (optional)','job.compAddr',D.job.compAddr,{full:1})}${GF('Recipient email (optional)','job.recEmail',D.job.recEmail,{full:1})}
@@ -533,8 +569,9 @@ const mo=new MutationObserver(()=>TIDY.forEach(id=>{const r=document.getElementB
 TIDY.forEach(id=>mo.observe(document.getElementById(id),{childList:true}));
 
 let tab='resume';
-const PANES={resume:'#paneResume',cover:'#paneCover',email:'#paneEmail',tracker:'#paneTracker',interview:'#paneInterview',ph:'#panePh'};
+const PANES={guide:'#paneGuide',resume:'#paneResume',cover:'#paneCover',email:'#paneEmail',tracker:'#paneTracker',interview:'#paneInterview',ph:'#panePh'};
 function refreshActive(){
+  if(tab==='guide')return;
   if(tab==='cover')refreshCover();else if(tab==='email')refreshEmail();
   else if(tab==='tracker')renderTracker();else if(tab==='interview')renderInterview();else if(tab==='ph')renderPhSide();
   else{const M=model(S);renderPreview(M);renderChecks(M);}
@@ -544,31 +581,34 @@ function showTab(t,fromHash){
   stopPractice();
   Object.keys(PANES).forEach(k=>{$(PANES[k]).hidden=k!==t;});
   document.querySelectorAll('#tabs button').forEach(b=>{if(b.dataset.tab===t)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
-  closeMenus();
+  closeMenus();document.body.classList.toggle('landing',t==='guide');
   if(t==='cover')renderCoverForm();if(t==='email')renderEmailForm();if(t==='interview')renderInterviewForm();if(t==='ph')renderPhForm();
   refreshActive();
   if(!fromHash){try{location.hash=t;}catch(e){}}
 }
 $('#tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(b){showTab(b.dataset.tab);window.scrollTo(0,0);}});
 window.addEventListener('hashchange',()=>showTab((location.hash||'').replace('#',''),true));
-function initTabs(){const h=(location.hash||'').replace('#','');if(PANES[h]&&h!=='resume')showTab(h,true);}
+document.addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g){e.preventDefault();showTab(g.dataset.go);window.scrollTo(0,0);}});
+function initTabs(){const h=(location.hash||'').replace('#','');
+  let seen=false;try{seen=!!localStorage.getItem('tk-seen');localStorage.setItem('tk-seen','1');}catch(e){}
+  showTab(PANES[h]?h:(!h&&!seen?'guide':'resume'),true);}
 
 
 /* ===== Versions, AI, PDF, import ===== */
 const vCard=()=>`<section class="card"><h2>Version &amp; format</h2><div class="grid">
   <label class="f"><span>Active version</span><select id="vSel">${V.list.map(v=>`<option value="${v.id}"${v.id===V.active?' selected':''}>${esc(v.name)}</option>`).join('')}</select></label>
   <label class="f"><span>Version name</span><input id="vName" value="${esc(activeV().name)}" autocomplete="off"></label></div>
-  <div class="toolbar"><button data-v="new">New blank</button><button data-v="dup">Duplicate</button><button data-v="del">Delete</button></div>
-  <p class="hint">Keep one version per kind of job. Everything below edits the active version.</p>
+  <div class="toolbar"><button data-v="new">New blank</button><button data-v="cv">New academic CV</button><button data-v="dup">Duplicate</button><button data-v="del">Delete</button></div>
+  <p class="hint">One version per kind of job. Edits apply to the active version.</p>
   <div class="grid">
-    ${SEL('Checklist style','preset',S.preset,[['ph','Philippine resume'],['us','Harvard / US']],1)}
+    ${SEL('Checklist style','preset',S.preset,[['ph','Philippine resume'],['us','Harvard / US'],['cv','Academic CV (multi-page)']],1)}
     ${SEL('Paper size','paper',S.paper,[['letter','Letter / short bond (8.5 x 11 in)'],['a4','A4']])}
-    ${S.preset==='us'?'':SEL('Section order','order',S.order,[['edu','Education first (students, fresh grads)'],['exp','Experience first (experienced)']])}${S.preset==='us'?'':SEL('Declaration line at the end','declaration',S.declaration,[['none','None'],['certify','"True and correct" statement'],['consent','Statement + data privacy consent']],1)}</div></section>`;
+    ${S.preset!=='ph'?'':SEL('Section order','order',S.order,[['edu','Education first (students, fresh grads)'],['exp','Experience first (experienced)']])}${S.preset!=='ph'?'':SEL('Declaration line at the end','declaration',S.declaration,[['none','None'],['certify','"True and correct" statement'],['consent','Statement + data privacy consent']],1)}</div></section>`;
 const aiCards=()=>`<section class="card"><h2>Tailor &amp; import</h2>
-  <p class="hint">Paste a job posting and Claude rewrites your objective, bullets and skills order to match it without inventing facts. The result is saved as a new version, so your original stays safe.</p>
+  <p class="hint">Claude rewrites your bullets to match a job posting without inventing facts, and saves it as a new version.</p>
   ${GF('Job description','job.desc',D.job.desc,{area:1,rows:5,full:1})}
   <div class="toolbar"><button id="bTailor" class="pri ai-only">Tailor to this job</button></div><div class="status" id="tailorStatus"></div>
-  <p class="hint">Or import an existing resume (.docx, text-based PDF or .txt). It is read in your browser and organized into the fields below as a new version.</p>
+  <p class="hint">Or import a .docx, text PDF or .txt resume as a new version.</p>
   <div class="toolbar"><button id="bImportPick">Import file</button></div><div class="status" id="importStatus"></div></section>`;
 function addVersion(v){V.list.push(v);V.active=v.id;syncS();renderForm();refresh();saveV();}
 let delArm=0;
@@ -577,6 +617,7 @@ $('#form').addEventListener('click',e=>{
   if(b){
     const act=b.dataset.v;
     if(act==='new'){const d=norm(clone(EMPTY));d.preset=S.preset;d.paper=S.paper;addVersion({id:uid(),name:'Untitled '+(V.list.length+1),data:d});}
+    else if(act==='cv'){const d=norm(clone(EMPTY));d.preset='cv';d.paper=S.paper;d.refsMode='list';d.leadershipTitle='Research Experience';d.name=S.name;d.address=S.address;d.phone=S.phone;d.email=S.email;d.linkedin=S.linkedin;d.website=S.website;addVersion({id:uid(),name:'Academic CV',data:d});}
     else if(act==='dup')addVersion({id:uid(),name:activeV().name+' (copy)',data:clone(S)});
     else if(act==='del'){
       if(V.list.length<2){toast('Keep at least one version.');return;}
@@ -740,7 +781,7 @@ async function extractText(f){
 function coerceResume(o){
   const r=norm(clone(EMPTY)),sv=v=>typeof v==='string'?v.trim():(v==null?'':String(v));
   ['name','address','phone','email','linkedin','website','objective','dob','civil','citizen'].forEach(k=>{if(o[k]!=null)r[k]=sv(o[k]);});
-  ['education','experience','leadership','trainings','licenses'].forEach(k=>{
+  ['education','experience','projects','leadership','trainings','licenses'].forEach(k=>{
     if(Array.isArray(o[k]))r[k]=o[k].filter(e=>e&&typeof e==='object').map(e=>({org:sv(e.org),loc:sv(e.loc),title:sv(e.title),dates:sv(e.dates),bullets:Array.isArray(e.bullets)?e.bullets.map(sv).filter(Boolean).join('\n'):sv(e.bullets)}));
     if(!r[k].length)r[k]=[blank(k)];
   });
@@ -768,11 +809,11 @@ async function importFile(f){
   let r=null;
   if(AI){
     r=await askJSON(`Convert this resume text into structured JSON. Copy the person's own words faithfully. Do NOT invent or embellish anything; use empty strings for anything missing.
-Rules: dates as "Month YYYY – Month YYYY" (or "Present"). Bullets are plain strings. Put school entries in "education" (most recent first), jobs in "experience", clubs/volunteering/projects in "leadership", seminars/courses in "trainings", licenses/eligibilities/certifications in "licenses". "skills" rows are {label, items} with comma-separated items. "objective" is a career objective or summary if present.
+Rules: dates as "Month YYYY – Month YYYY" (or "Present"). Bullets are plain strings. Put school entries in "education" (most recent first), jobs in "experience", clubs/volunteering in "leadership", personal, academic and tech projects in "projects", seminars/courses in "trainings", licenses/eligibilities/certifications in "licenses". "skills" rows are {label, items} with comma-separated items. "objective" is a career objective or summary if present.
 Reply with ONLY this JSON:
 {"name":string,"address":string,"phone":string,"email":string,"linkedin":string,"website":string,"objective":string,"dob":string,"civil":string,"citizen":string,
 "education":[{"org":string,"loc":string,"title":string,"dates":string,"bullets":[string]}],
-"experience":[same shape],"leadership":[same shape],"trainings":[same shape],"licenses":[same shape],
+"experience":[same shape],"projects":[same shape],"leadership":[same shape],"trainings":[same shape],"licenses":[same shape],
 "skills":[{"label":string,"items":string}]}
 
 RESUME TEXT:
@@ -960,7 +1001,7 @@ ${toText(model(S)).slice(0,9000)}`,'#iStatus');
 function starCompose(st){const p=(l,v)=>v&&v.trim()?`${l}: ${v.trim().replace(/[.\s]+$/,'')}.`:'';return[p('Situation',st.s),p('Task',st.t),p('Action',st.a),p('Result',st.r)].filter(Boolean).join(' ');}
 function renderInterview(){
   const bank=allQuestions(),groups={};bank.forEach(q=>{(groups[q.c]=groups[q.c]||[]).push(q);});
-  const bullets=[];['experience','leadership'].forEach(k=>S[k].forEach(e=>bulletsOf(e.bullets).forEach(b=>bullets.push({b:b,where:[e.title,e.org].filter(Boolean).join(', ')}))));
+  const bullets=[];['experience','projects','leadership'].forEach(k=>S[k].forEach(e=>bulletsOf(e.bullets).forEach(b=>bullets.push({b:b,where:[e.title,e.org].filter(Boolean).join(', ')}))));
   $('#iSide').innerHTML=
    `<section class="card"><h2>Practice</h2><div id="iPractice"></div></section>`+
    (I.ai.length?`<section class="card"><h2>Tailored questions (AI drafts)</h2>${I.ai.map((a,i)=>`<details ${i===0?'open':''} style="margin:0 0 8px"><summary style="cursor:pointer;color:var(--ink);font-weight:600">${esc(a.question)}</summary>
