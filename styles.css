@@ -1,3 +1,4 @@
+
 /* Layout: slim app bar with tabs; editor column left, sticky preview/output column right; one accent, semantic colors separate. */
 :root{--bg:#f5f5f3;--card:#fff;--sunk:#fafaf8;--stage:#e7e6e1;--hover:#f0efeb;--ink:#1c1c1a;--mute:#65645e;--line:#dddcd5;--acc:#7a1f2b;--acc-soft:#f6e6e8;--on-acc:#fff;--ok:#2d6a4f;--warn:#9a6700;--bad:#b42318;--due:#fff4e0;--ring:#c27c86;--shadow:0 1px 2px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.08);color-scheme:light}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161517;--card:#201f22;--sunk:#1a191c;--stage:#111012;--hover:#2a292d;--ink:#eceae6;--mute:#a09ea6;--line:#37353a;--acc:#e8a0a9;--acc-soft:#3a2428;--on-acc:#2a0d12;--ok:#5fc08f;--warn:#e0a63b;--bad:#f07a6e;--due:#3a2f1a;--ring:#a8626c;--shadow:0 1px 2px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.5);color-scheme:dark}}
@@ -131,6 +132,11 @@ button.big{min-height:40px;padding:0 22px;font-size:15px}
 .landing .tabs,.landing .help{display:none}
 @media(max-width:700px){.tiles{grid-template-columns:1fr 1fr}}
 @media(max-width:420px){.tiles{grid-template-columns:1fr}}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;z-index:60;padding:16px}
+.dlg{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;max-width:420px;width:100%;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px}
+.dlg h2{margin:0;font-size:16px}.dlg p{margin:0}
+a.btn{display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);text-decoration:none;font-weight:500;background:var(--card)}
+a.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font-weight:600}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 @media(max-width:900px){
   header.top{gap:12px;padding:0 16px}

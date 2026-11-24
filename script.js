@@ -1,3 +1,4 @@
+
 (function(){
 'use strict';
 const $=s=>document.querySelector(s);
@@ -308,8 +309,24 @@ async function buildDocx(M,bodyXml){
 let DL=null;
 (async()=>{try{DL=(window.claude&&window.claude.use)?await window.claude.use('downloads'):null;}catch(e){DL=null;}})();
 let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2800);}
+const MIME={pdf:'application/pdf',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',txt:'text/plain;charset=utf-8',csv:'text/csv;charset=utf-8'};
+function fallbackSave(name,data){
+  const ext=(name.split('.').pop()||'').toLowerCase();
+  const blob=data instanceof Blob?data:new Blob([data],{type:MIME[ext]||'application/octet-stream'});
+  const url=URL.createObjectURL(blob);
+  let o=$('#saveDlg');if(o)o.remove();
+  o=document.createElement('div');o.id='saveDlg';o.className='overlay';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label','Save file');
+  o.innerHTML='<div class="dlg"><h2>Your file is ready</h2><p>This view blocks automatic downloads. Use one of these to save <b></b>.</p><div class="toolbar"><a class="btn pri" id="dlA" download target="_blank" rel="noopener">Save file</a><a class="btn" id="dlB" target="_blank" rel="noopener">Open in new tab</a><button id="dlX">Close</button></div><p class="hint">If neither works, open this toolkit in a full browser tab, or use Copy text.</p></div>';
+  o.querySelector('b').textContent=name;
+  const a=o.querySelector('#dlA');a.href=url;a.setAttribute('download',name);
+  o.querySelector('#dlB').href=url;
+  const close=()=>{o.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);};
+  o.querySelector('#dlX').onclick=close;o.addEventListener('click',e=>{if(e.target===o)close();});
+  document.body.appendChild(o);a.focus();
+}
 async function saveFile(name,data){
-  if(!DL){toast('Downloads are not available in this view. Use Copy text instead.');return;}
+  if(!DL){try{DL=(window.claude&&window.claude.use)?await window.claude.use('downloads'):null;}catch(e){DL=null;}}
+  if(!DL){fallbackSave(name,data);return;}
   try{await DL.save({filename:name,data:data});toast('Saved '+name);}
   catch(e){if(e&&e.code==='declined')return;toast('Could not save: '+((e&&e.message)||'unknown error'));}
 }
@@ -739,7 +756,7 @@ function resumePdf(M){
   return w.finish((M.name||'Resume')+' - Resume');
 }
 async function pdfDownload(kind){
-  try{await loadLib(LIBS.jspdf);}catch(e){toast(e.message);return;}
+  if(!window.jspdf){try{await loadLib(LIBS.jspdf);}catch(e){toast(e.message);return;}}
   const stem=base().replace(/_Resume$/,'');
   try{
     if(kind==='cover')await saveFile(stem+'_Cover_Letter.pdf',coverPdf(coverModel()));

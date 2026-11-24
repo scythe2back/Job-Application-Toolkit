@@ -4,9 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Job Application Toolkit</title>
+<link rel="stylesheet" href="styles.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%237a1f2b'/%3E%3Cpath d='M10 7h8l5 5v13H10z' fill='%23fff'/%3E%3Cpath d='M13 19l2.6 2.6L20.5 16' fill='none' stroke='%237a1f2b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 
-<link rel="stylesheet" href="styles.css">
+
 </head>
 <body>
 <header class="top">
@@ -113,7 +114,11 @@
 <input type="file" id="fImport" accept=".docx,.pdf,.txt" hidden>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+
+
+<script src="jszip.min.js"></script>
+<script src="jspdf.min.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
