@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Job Application Toolkit</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <h1>Job<span> Application</span> Toolkit</h1>
+  <nav class="tabs" id="tabs" aria-label="Sections"><button data-tab="resume" aria-current="page">Resume</button><button data-tab="cover">Cover letter</button><button data-tab="email">Email</button><button data-tab="tracker">Tracker</button><button data-tab="interview">Interview</button><button data-tab="ph">PH tools</button></nav>
+</header>
+<main id="paneResume" data-view="edit">
+  <div class="mtoggle" role="group" aria-label="View"><button data-view="edit" aria-pressed="true">Edit</button><button data-view="preview" aria-pressed="false">Preview</button></div>
+  <div id="form"></div>
+  <div class="side">
+    <div class="bar"><span class="chip" id="chipR">&nbsp;</span><span class="sp"></span>
+      <div class="menu"><button class="pri" data-menu aria-haspopup="true" aria-expanded="false">Export &#9662;</button><div class="pop" role="menu" hidden><button id="bDocx" role="menuitem">Word (.docx)</button><button id="bPdf" role="menuitem">PDF (.pdf)</button><button id="bTxt" role="menuitem">Plain text (.txt)</button><hr><button id="bCopy" role="menuitem">Copy text</button></div></div>
+      <div class="menu"><button data-menu aria-haspopup="true" aria-expanded="false" aria-label="More actions">&#8943;</button><div class="pop" role="menu" hidden><button id="bSample" role="menuitem">Load sample</button><button id="bClear" role="menuitem">Clear all</button></div></div>
+    </div>
+    <div class="card checks" id="checkCard"><h2>ATS checklist</h2><div id="checks"></div>
+      <details>
+        <summary>Why this layout is ATS-safe</summary>
+        <ul>
+          <li>One column, no tables, text boxes, columns, icons, photos or graphics.</li>
+          <li>Standard headings that parsers recognize (Education, Experience, Skills).</li>
+          <li>Real bullets and right-aligned dates via a tab stop, not a table.</li>
+          <li>Times New Roman 11 pt, 0.75 in margins, plain text for contact details.</li>
+          <li>Upload the .docx (or save it as PDF from Word) unless the employer says otherwise.</li>
+        </ul>
+      </details>
+      <details>
+        <summary>Philippine application tips</summary>
+        <ul>
+          <li>No photo needed. Images can break ATS parsing. If an employer asks for a 2x2 photo, attach it separately.</li>
+          <li>Birth date, civil status and citizenship are common on Philippine resumes but optional. Share only what you are comfortable with.</li>
+          <li>Applying to a government agency? Many require the Civil Service Commission's Personal Data Sheet (CS Form 212) in addition to a resume. Check the job posting for the current form.</li>
+          <li>Letter (8.5 x 11 in, "short bond") and A4 are both common. Use what the employer asks for.</li>
+        </ul>
+      </details>
+    </div>
+    <div class="stage" id="stage"><div class="scaler" id="scaler"><div class="paper" id="paper"><div id="resume"></div><div class="pgline" id="pgline">bottom margin &mdash; page 1 ends</div></div></div></div>
+  </div>
+</main>
+<main id="paneCover" data-view="edit" hidden>
+  <div class="mtoggle" role="group" aria-label="View"><button data-view="edit" aria-pressed="true">Edit</button><button data-view="preview" aria-pressed="false">Preview</button></div>
+  <div id="cForm"></div>
+  <div class="side">
+    <div class="bar"><span class="chip" id="chipC">&nbsp;</span><span class="sp"></span>
+      <div class="menu"><button class="pri" data-menu aria-haspopup="true" aria-expanded="false">Export &#9662;</button><div class="pop" role="menu" hidden><button id="cDocx" role="menuitem">Word (.docx)</button><button id="cPdf" role="menuitem">PDF (.pdf)</button><button id="cTxt" role="menuitem">Plain text (.txt)</button><hr><button id="cCopy" role="menuitem">Copy text</button></div></div>
+      <div class="menu"><button data-menu aria-haspopup="true" aria-expanded="false" aria-label="More actions">&#8943;</button><div class="pop" role="menu" hidden><button id="cSample" role="menuitem">Load sample</button><button id="cClear" role="menuitem">Clear</button></div></div>
+    </div>
+    <div class="card checks"><h2>Cover letter checklist</h2><div id="cChecks"></div></div>
+    <div class="stage" id="cStage"><div class="scaler" id="cScaler"><div class="paper" id="cPaper"><div id="cBody"></div><div class="pgline" id="cPg">bottom margin &mdash; page 1 ends</div></div></div></div>
+  </div>
+</main>
+<main id="paneEmail" data-view="edit" hidden>
+  <div class="mtoggle" role="group" aria-label="View"><button data-view="edit" aria-pressed="true">Edit</button><button data-view="preview" aria-pressed="false">Preview</button></div>
+  <div id="eForm"></div>
+  <div class="side">
+    <div class="bar"><span class="sp"></span>
+      <button id="eCopyAll" class="pri">Copy email</button>
+      <div class="menu"><button data-menu aria-haspopup="true" aria-expanded="false" aria-label="More actions">&#8943;</button><div class="pop" role="menu" hidden><button id="eCopySub" role="menuitem">Copy subject</button><button id="eCopyBody" role="menuitem">Copy body</button><button id="eTxt" role="menuitem">Download .txt</button><hr><button id="eSample" role="menuitem">Load sample</button><button id="eClear" role="menuitem">Clear</button></div></div>
+    </div>
+    <div class="card"><h2>Your email</h2><div id="eOut"></div></div>
+    <div class="card checks"><h2>Email checklist</h2><div id="eChecks"></div></div>
+  </div>
+</main>
+<main id="paneTracker" class="wide" hidden>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div class="bar"><button id="tAdd" class="pri">+ Add application</button><span class="sp"></span>
+      <div class="menu"><button data-menu aria-haspopup="true" aria-expanded="false" aria-label="More actions">More &#9662;</button><div class="pop" role="menu" hidden><button id="tFromJob" role="menuitem">Add current job target</button><button id="tSort" role="menuitem">Sort by follow-up date</button><button id="tCsv" role="menuitem">Download .csv</button><hr><button id="tSample" role="menuitem">Load sample</button><button id="tClear" role="menuitem">Clear all</button></div></div>
+    </div>
+    <div class="card"><h2>Overview</h2><div id="tSummary"></div></div>
+    <div class="card" style="overflow:auto"><div id="tTable"></div></div>
+  </div>
+</main>
+<main id="paneInterview" hidden>
+  <div id="iForm"></div>
+  <div class="side" id="iSide"></div>
+</main>
+<main id="panePh" hidden>
+  <div id="pForm"></div>
+  <div class="side" id="pSide"></div>
+</main>
+<input type="file" id="fImport" accept=".docx,.pdf,.txt" hidden>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
