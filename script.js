@@ -60,7 +60,7 @@ const SAMPLE_CV={
   dob:'',civil:'',citizen:'',
   refs:[{org:'Dr. Elena Cruz',loc:'elena.cruz@sample.edu.example',title:'Professor, College of Computing, Metro Manila State University',dates:'',bullets:''},{org:'Engr. Juan Dela Cruz',loc:'+63 900 000 0000',title:'SOC Manager, Sample Managed Security Services, Inc.',dates:'',bullets:''}]
 };
-const EMPTY={preset:'ph',paper:'letter',order:'edu',refsMode:'request',declaration:'none',name:'',address:'',phone:'',email:'',linkedin:'',website:'',font:'times',objective:'',dob:'',civil:'',citizen:'',publications:'',presentations:'',grants:'',service:'',leadershipTitle:'Leadership & Activities'};
+const EMPTY={preset:'ph',paper:'letter',order:'edu',refsMode:'request',declaration:'none',name:'',address:'',phone:'',email:'',linkedin:'',website:'',font:'times',awards:'',objective:'',dob:'',civil:'',citizen:'',publications:'',presentations:'',grants:'',service:'',leadershipTitle:'Leadership & Activities'};
 LISTS.forEach(k=>{EMPTY[k]=[blank(k)];});
 const clone=o=>JSON.parse(JSON.stringify(o));
 
@@ -105,6 +105,7 @@ function renderForm(){
   listCard('experience','Experience','Most recent first. Bullet = action verb + what you did + result.')+
   listCard('projects','Projects','Labs, capstones, CTFs, personal builds. Name the tools you used.')+
   listCard('leadership',S.preset==='cv'?'Research experience':'Leadership &amp; activities','Optional. Student orgs, volunteering, projects.',F('Section heading','leadershipTitle',S.leadershipTitle,{full:1}).replace('class="f full"','class="f full" style="margin-bottom:10px"'))+
+  (S.preset==='cv'?'':`<section class="card"><h2>Awards &amp; honors</h2><p class="hint">One per line, with the year. Example: Dean's Lister, 2023.</p>${F('Entries (one per line)','awards',S.awards,{area:1,rows:4,full:1})}</section>`)+
   (S.preset==='cv'?[['publications','Publications','Most recent first, one citation per line, in the style your field uses (APA, IEEE).'],['presentations','Presentations','Conference talks and posters, one per line.'],['grants','Grants, fellowships &amp; awards','One per line, with the year.'],['service','Professional service &amp; memberships','Reviewing, committees and societies, one per line.']].map(x=>`<section class="card"><h2>${x[1]}</h2><p class="hint">${x[2]}</p>${F('Entries (one per line)',x[0],S[x[0]],{area:1,rows:5,full:1})}</section>`).join(''):'')+
   `<section class="card"><h2>Skills &amp; interests</h2><p class="hint">Label + comma-separated items, e.g. Technical: Excel, SQL.</p>`+
   S.skills.map((k,i)=>`<div class="entry"><div class="ehead"><strong>${esc(k.label||'Row '+(i+1))}</strong><span class="mini">
@@ -158,6 +159,7 @@ function model(d){
   else if(!us&&(d.objective||'').trim())by.objective={id:'objective',title:'Career Objective',skills:[row('',d.objective)]};
   const E=ent(d.education);if(E.length)by.education={id:'education',title:'Education',entries:E};
   const X=ent(d.experience);if(X.length)by.experience={id:'experience',title:cv?'Academic & Professional Experience':'Experience',entries:X};
+  if(!cv)txt('awards','Awards & Honors',d.awards);
   const PJ=ent(d.projects);if(PJ.length)by.projects={id:'projects',title:'Projects',entries:PJ};
   const L=ent(d.leadership);if(L.length)by.leadership={id:'leadership',title:(d.leadershipTitle||'').trim()||'Leadership & Activities',entries:L};
   const K=(d.skills||[]).map(k=>row((k.label||'').trim(),k.items)).filter(k=>k.items);
@@ -173,7 +175,7 @@ function model(d){
   else if(us){/* Harvard format omits references */}
   else if(d.refsMode==='list'){const R=ent(d.refs);if(R.length)by.refs={id:'refs',title:'Character References',entries:R};}
   else if(d.refsMode==='request')by.refs={id:'refs',title:'References',skills:[row('','Available upon request.')]};
-  const order=cv?['objective','education','experience','projects','leadership','publications','presentations','grants','trainings','licenses','service','skills','refs']:(d.order==='exp'&&!us)?['objective','experience','projects','education','leadership','skills','trainings','licenses','personal','refs']:['objective','education','experience','projects','leadership','skills','trainings','licenses','personal','refs'];
+  const order=cv?['objective','education','experience','projects','leadership','publications','presentations','grants','trainings','licenses','service','skills','refs']:(d.order==='exp'&&!us)?['objective','experience','projects','education','leadership','awards','skills','trainings','licenses','personal','refs']:['objective','education','experience','projects','leadership','awards','skills','trainings','licenses','personal','refs'];
   return{name:(d.name||'').trim(),contact:[d.address,d.phone,d.email,d.linkedin,d.website].map(s=>(s||'').trim()).filter(Boolean),sections:order.map(id=>by[id]).filter(Boolean),footer:footerLines(d)};
 }
 
