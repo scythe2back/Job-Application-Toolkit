@@ -1,6 +1,8 @@
 (function(){
 'use strict';
 const $=s=>document.querySelector(s);
+const parseRich=t=>{const out=[];String(t==null?'':t).split(/(\*\*\*[^*\n]+\*\*\*|\*\*[^*\n]+\*\*|\*[^*\s][^*\n]*\*)/).forEach(p=>{if(!p)return;let m;if((m=p.match(/^\*\*\*([^*]+)\*\*\*$/)))out.push({t:m[1],b:1,i:1});else if((m=p.match(/^\*\*([^*]+)\*\*$/)))out.push({t:m[1],b:1});else if((m=p.match(/^\*([^*]+)\*$/)))out.push({t:m[1],i:1});else out.push({t:p});});return out;};
+const stripRich=t=>parseRich(t).map(x=>x.t).join('');
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const KEY='resume-gen-harvard-ph-v2';
 const DIMS={letter:{w:816,h:1056,tw:12240,th:15840},a4:{w:794,h:1123,tw:11906,th:16838}};
@@ -58,7 +60,7 @@ const SAMPLE_CV={
   dob:'',civil:'',citizen:'',
   refs:[{org:'Dr. Elena Cruz',loc:'elena.cruz@sample.edu.example',title:'Professor, College of Computing, Metro Manila State University',dates:'',bullets:''},{org:'Engr. Juan Dela Cruz',loc:'+63 900 000 0000',title:'SOC Manager, Sample Managed Security Services, Inc.',dates:'',bullets:''}]
 };
-const EMPTY={preset:'ph',paper:'letter',order:'edu',refsMode:'request',declaration:'none',name:'',address:'',phone:'',email:'',linkedin:'',website:'',objective:'',dob:'',civil:'',citizen:'',publications:'',presentations:'',grants:'',service:'',leadershipTitle:'Leadership & Activities'};
+const EMPTY={preset:'ph',paper:'letter',order:'edu',refsMode:'request',declaration:'none',name:'',address:'',phone:'',email:'',linkedin:'',website:'',font:'times',objective:'',dob:'',civil:'',citizen:'',publications:'',presentations:'',grants:'',service:'',leadershipTitle:'Leadership & Activities'};
 LISTS.forEach(k=>{EMPTY[k]=[blank(k)];});
 const clone=o=>JSON.parse(JSON.stringify(o));
 
@@ -92,7 +94,7 @@ const entryCard=(kind,e,i,n)=>{const K=KINDS[kind],b=kind+'.'+i;
 const listCard=(kind,title,hint,extra)=>`<section class="card"><h2>${title}</h2>${hint?`<p class="hint">${hint}</p>`:''}${extra||''}${S[kind].map((e,i)=>entryCard(kind,e,i,S[kind].length)).join('')}<button data-act="add" data-k="${kind}">+ Add entry</button></section>`;
 
 function renderForm(){
-  $('#form').innerHTML=vCard()+aiCards()+
+  $('#form').innerHTML=`<div class="fmtbar" role="toolbar" aria-label="Text formatting"><span>Format</span><button type="button" id="fmtB" aria-label="Bold (Ctrl+B)" title="Bold (Ctrl+B)"><b>B</b></button><button type="button" id="fmtI" aria-label="Italic (Ctrl+I)" title="Italic (Ctrl+I)"><i>I</i></button><small>Select text in a field, then press B or I.</small></div>`+vCard()+aiCards()+
   `<section class="card"><h2>Contact</h2><div class="grid">
     ${F('Full name','name',S.name,{full:1})}${F('Address (street, barangay, city, province, ZIP)','address',S.address,{full:1})}
     ${F('Mobile (+63 9XX XXX XXXX)','phone',S.phone)}${F('Email','email',S.email)}
@@ -138,7 +140,7 @@ $('#form').addEventListener('click',e=>{
 });
 
 /* ---------- model shared by preview, docx, text ---------- */
-const bulletsOf=t=>(t||'').split('\n').map(s=>s.replace(/^\s*[-•*–]\s*/,'').trim()).filter(Boolean);
+const bulletsOf=t=>(t||'').split('\n').map(s=>s.replace(/^\s*(?:[-•–]\s*|\*\s+)/,'').trim()).filter(Boolean);
 function footerLines(d){
   if(d.preset!=='ph')return[];
   const c='I hereby certify that the above information is true and correct to the best of my knowledge.';
@@ -183,18 +185,18 @@ function resumeHTML(M){
     h+=`<div class="r-h">${esc(s.title.toUpperCase())}</div>`;
     if(s.entries)s.entries.forEach(e=>{
       h+='<div class="r-entry">';
-      if(e.org||e.loc)h+=`<div class="r-row"><b>${esc(e.org)}</b><span>${esc(e.loc)}</span></div>`;
-      if(e.title||e.dates)h+=`<div class="r-row"><i>${esc(e.title)}</i><span>${esc(e.dates)}</span></div>`;
-      if(e.bullets.length)h+='<ul>'+e.bullets.map(b=>`<li>${esc(b)}</li>`).join('')+'</ul>';
+      if(e.org||e.loc)h+=`<div class="r-row"><b>${rh(e.org)}</b><span>${rh(e.loc)}</span></div>`;
+      if(e.title||e.dates)h+=`<div class="r-row"><i>${rh(e.title)}</i><span>${rh(e.dates)}</span></div>`;
+      if(e.bullets.length)h+='<ul>'+e.bullets.map(b=>`<li>${rh(b)}</li>`).join('')+'</ul>';
       h+='</div>';
     });
-    if(s.skills)s.skills.forEach(k=>{h+=`<div class="r-skill">${k.label?`<b>${esc(k.label)}:</b> `:''}${esc(k.items)}</div>`;});
+    if(s.skills)s.skills.forEach(k=>{h+=`<div class="r-skill">${k.label?`<b>${esc(k.label)}:</b> `:''}${rh(k.items)}</div>`;});
   });
   (M.footer||[]).forEach(t=>{h+=`<div class="r-foot">${esc(t)}</div>`;});
   return h;
 }
 let contentH=0;
-const dims=()=>DIMS[S.paper]||DIMS.letter;
+const dims=()=>{document.documentElement.style.setProperty('--rfont',S.font==='arial'?'Arial,Helvetica,"Liberation Sans",sans-serif':'"Times New Roman",Times,"Liberation Serif",serif');return DIMS[S.paper]||DIMS.letter;};
 function renderPreview(M){
   const D=dims();
   $('#resume').innerHTML=resumeHTML(M);
@@ -229,7 +231,7 @@ function runChecks(M,d){
   if(!has('education'))add('bad','Education is empty.');
   else if(!ph&&!cv){const f=M.sections.find(s=>s.id!=='objective');add(f&&f.id==='education'?'ok':'warn',f&&f.id==='education'?'Education comes first, as in the Harvard format.':'Harvard format puts Education first for students and recent graduates.');}
   if(!has('experience'))add('warn','No Experience entries yet.');
-  const work=[];M.sections.forEach(s=>{if(s.id==='experience'||s.id==='leadership'||s.id==='projects')s.entries.forEach(e=>e.bullets.forEach(b=>work.push(b)));});
+  const work=[];M.sections.forEach(s=>{if(s.id==='experience'||s.id==='leadership'||s.id==='projects')s.entries.forEach(e=>e.bullets.forEach(b=>work.push(stripRich(b))));});
   if(work.length){
     const weak=work.filter(b=>WEAK.test(b)||/^[a-z]/.test(b)).length;
     add(weak?'warn':'ok',weak?`${weak} bullet(s) open weakly (pronouns, "responsible for", "worked on", lowercase). Start with an action verb such as Led, Built, Processed.`:'All bullets open with a strong, capitalized start.');
@@ -280,27 +282,30 @@ function toText(M){
     if(s.entries)s.entries.forEach(e=>{const a=[e.org,e.loc].filter(Boolean).join(', ');if(a)L.push(a);const b=[e.title,e.dates].filter(Boolean).join(' | ');if(b)L.push(b);e.bullets.forEach(x=>L.push('- '+x));});
     if(s.skills)s.skills.forEach(k=>L.push((k.label?k.label+': ':'')+k.items));});
   (M.footer||[]).forEach(t=>L.push('',t));
-  return L.join('\n')+'\n';
+  return stripRich(L.join('\n'))+'\n';
 }
+const rh=t=>parseRich(t).map(x=>{let h=esc(x.t);if(x.i)h='<i>'+h+'</i>';if(x.b)h='<b>'+h+'</b>';return h;}).join('');
 const X=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const run=(t,o)=>{o=o||{};return `<w:r><w:rPr>${o.b?'<w:b/>':''}${o.i?'<w:i/>':''}${o.sz?`<w:sz w:val="${o.sz}"/><w:szCs w:val="${o.sz}"/>`:''}</w:rPr><w:t xml:space="preserve">${X(t)}</w:t></w:r>`;};
+const rrun=(t,o)=>{o=o||{};return parseRich(t).map(x=>run(x.t,Object.assign({},o,{b:o.b||x.b,i:o.i||x.i}))).join('');};
+const FONTNAME=()=>S.font==='arial'?'Arial':'Times New Roman';
 const TAB='<w:r><w:tab/></w:r>';
 let TABPOS=10080;
 const para=(inner,o)=>{o=o||{};return `<w:p><w:pPr>${o.keep?'<w:keepNext/>':''}${o.num?'<w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr>':''}${o.border?'<w:pBdr><w:bottom w:val="single" w:sz="6" w:space="1" w:color="000000"/></w:pBdr>':''}${o.tabs?`<w:tabs><w:tab w:val="right" w:pos="${TABPOS}"/></w:tabs>`:''}<w:spacing w:before="${o.before||0}" w:after="${o.after||0}"/>${o.jc?`<w:jc w:val="${o.jc}"/>`:''}</w:pPr>${inner}</w:p>`;};
 function docBody(M){
-  let b=para(run(M.name||'Your Name',{b:1,sz:28}),{jc:'center'});
-  if(M.contact.length)b+=para(run(M.contact.join(' | '),{sz:20}),{jc:'center'});
+  let b=para(rrun(M.name||'Your Name',{b:1,sz:28}),{jc:'center'});
+  if(M.contact.length)b+=para(rrun(M.contact.join(' | '),{sz:20}),{jc:'center'});
   M.sections.forEach(s=>{
-    b+=para(run(s.title.toUpperCase(),{b:1}),{border:1,keep:1,before:160,after:40});
+    b+=para(rrun(s.title.toUpperCase(),{b:1}),{border:1,keep:1,before:160,after:40});
     if(s.entries)s.entries.forEach(e=>{
       const r2=e.title||e.dates;
-      if(e.org||e.loc)b+=para(run(e.org,{b:1})+TAB+run(e.loc),{tabs:1,before:80,keep:!!(r2||e.bullets.length)});
-      if(r2)b+=para(run(e.title,{i:1})+TAB+run(e.dates),{tabs:1,before:(e.org||e.loc)?0:80,keep:!!e.bullets.length});
-      e.bullets.forEach(t=>{b+=para(run(t),{num:1});});
+      if(e.org||e.loc)b+=para(rrun(e.org,{b:1})+TAB+rrun(e.loc),{tabs:1,before:80,keep:!!(r2||e.bullets.length)});
+      if(r2)b+=para(rrun(e.title,{i:1})+TAB+rrun(e.dates),{tabs:1,before:(e.org||e.loc)?0:80,keep:!!e.bullets.length});
+      e.bullets.forEach(t=>{b+=para(rrun(t),{num:1});});
     });
-    if(s.skills)s.skills.forEach(k=>{b+=para((k.label?run(k.label+': ',{b:1}):'')+run(k.items),{before:20});});
+    if(s.skills)s.skills.forEach(k=>{b+=para((k.label?rrun(k.label+': ',{b:1}):'')+rrun(k.items),{before:20});});
   });
-  (M.footer||[]).forEach(t=>{b+=para(run(t,{i:1,sz:20}),{before:160});});
+  (M.footer||[]).forEach(t=>{b+=para(rrun(t,{i:1,sz:20}),{before:160});});
   return b;
 }
 const NS='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
@@ -310,7 +315,7 @@ async function buildDocx(M,bodyXml){
   z.file('[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/></Types>');
   z.file('_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
   z.file('word/_rels/document.xml.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/></Relationships>');
-  z.file('word/styles.xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles ${NS}><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:eastAsia="Times New Roman" w:cs="Times New Roman"/><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-US"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style></w:styles>`);
+  z.file('word/styles.xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles ${NS}><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="${FONTNAME()}" w:hAnsi="${FONTNAME()}" w:eastAsia="${FONTNAME()}" w:cs="${FONTNAME()}"/><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-US"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style></w:styles>`);
   z.file('word/numbering.xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:numbering ${NS}><w:abstractNum w:abstractNumId="0"><w:multiLevelType w:val="hybridMultilevel"/><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="•"/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="360" w:hanging="220"/></w:pPr><w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman"/></w:rPr></w:lvl></w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num></w:numbering>`);
   z.file('word/document.xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ${NS}><w:body>${bodyXml!==undefined?bodyXml:docBody(M)}<w:sectPr><w:pgSz w:w="${D.tw}" w:h="${D.th}"/><w:pgMar w:top="1080" w:right="1080" w:bottom="1080" w:left="1080" w:header="720" w:footer="720" w:gutter="0"/></w:sectPr></w:body></w:document>`);
   return z.generateAsync({type:'blob',compression:'DEFLATE'});
@@ -363,8 +368,8 @@ $('#bDocx').onclick=async()=>{
 };
 $('#bTxt').onclick=()=>saveFile(base()+'.txt',toText(model(S)));
 $('#bCopy').onclick=async()=>{try{await navigator.clipboard.writeText(toText(model(S)));toast('Resume text copied');}catch(e){toast('Copy was blocked in this view.');}};
-$('#bSample').onclick=()=>{const pk=S.paper;activeV().data=clone(S.preset==='cv'?SAMPLE_CV:SAMPLE);activeV().data.paper=pk;syncS();renderForm();refresh();toast('Sample loaded');};
-$('#bClear').onclick=async()=>{if(!await askConfirm('Clear this resume?','Every field in "'+activeV().name+'" will be emptied. Your other versions are not affected.','Clear all'))return;const pk=S.paper,pr=S.preset;activeV().data=clone(EMPTY);activeV().data.paper=pk;activeV().data.preset=pr;if(pr==='cv'){activeV().data.refsMode='list';activeV().data.leadershipTitle='Research Experience';}syncS();renderForm();refresh();};
+$('#bSample').onclick=()=>{const pk=S.paper,fk=S.font;activeV().data=clone(S.preset==='cv'?SAMPLE_CV:SAMPLE);activeV().data.paper=pk;activeV().data.font=fk;syncS();renderForm();refresh();toast('Sample loaded');};
+$('#bClear').onclick=async()=>{if(!await askConfirm('Clear this resume?','Every field in "'+activeV().name+'" will be emptied. Your other versions are not affected.','Clear all'))return;const pk=S.paper,pr=S.preset,fk=S.font;activeV().data=clone(EMPTY);activeV().data.paper=pk;activeV().data.font=fk;activeV().data.preset=pr;if(pr==='cv'){activeV().data.refsMode='list';activeV().data.leadershipTitle='Research Experience';}syncS();renderForm();refresh();};
 
 function refresh(){
   if(tab==='resume'){const M=model(S);renderPreview(M);renderChecks(M);}
@@ -578,6 +583,22 @@ const loadDocSample=()=>{D=DSAMPLE();renderCoverForm();renderEmailForm();refresh
 const clearDocs=async()=>{if(!await askConfirm('Clear the cover letter and email?','The job target and all cover letter and email fields will be emptied.','Clear all'))return;D=DEMPTY();renderCoverForm();renderEmailForm();refreshActive();saveDocs();};
 $('#cSample').onclick=loadDocSample;$('#eSample').onclick=loadDocSample;$('#cClear').onclick=clearDocs;$('#eClear').onclick=clearDocs;
 
+/* ===== text formatting: **bold** and *italic* ===== */
+let lastF=null;
+document.addEventListener('focusin',e=>{const t=e.target;if(t.closest&&t.closest('#form')&&(t.tagName==='TEXTAREA'||(t.tagName==='INPUT'&&(!t.type||t.type==='text'))))lastF=t;});
+function wrapSel(mark){
+  const t=lastF;if(!t||!document.contains(t)){toast('Click inside a text field first.');return;}
+  const a=t.selectionStart,b=t.selectionEnd,v=t.value,sel=v.slice(a,b),L=mark.length;
+  let nv,ns,ne;
+  const around=v.slice(a-L,a)===mark&&v.slice(b,b+L)===mark&&(L===2||(v[a-2]!=='*'&&v[b+1]!=='*'));
+  if(sel.length>2*L&&sel.startsWith(mark)&&sel.endsWith(mark)&&!(mark==='*'&&sel.startsWith('**'))){nv=v.slice(0,a)+sel.slice(L,-L)+v.slice(b);ns=a;ne=b-2*L;}
+  else if(around){nv=v.slice(0,a-L)+sel+v.slice(b+L);ns=a-L;ne=b-L;}
+  else{nv=v.slice(0,a)+mark+sel+mark+v.slice(b);ns=a+L;ne=b+L;}
+  t.value=nv;t.focus();t.setSelectionRange(ns,ne);t.dispatchEvent(new Event('input',{bubbles:true}));
+}
+document.addEventListener('mousedown',e=>{if(e.target.closest('#fmtB,#fmtI'))e.preventDefault();});
+document.addEventListener('click',e=>{if(e.target.closest('#fmtB'))wrapSel('**');else if(e.target.closest('#fmtI'))wrapSel('*');});
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&!e.altKey&&(e.key==='b'||e.key==='i')&&e.target.closest&&e.target.closest('#form')&&(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT')){e.preventDefault();lastF=e.target;wrapSel(e.key==='b'?'**':'*');}});
 /* ===== UI: menus, accordions, mobile view toggle ===== */
 function closeMenus(except){document.querySelectorAll('.menu .pop').forEach(p=>{if(p!==except){p.hidden=true;const b=p.previousElementSibling;if(b)b.setAttribute('aria-expanded','false');}});}
 document.addEventListener('click',e=>{
@@ -643,6 +664,7 @@ const vCard=()=>`<section class="card"><h2>Version &amp; format</h2><div class="
   <p class="hint">One version per kind of job. Edits apply to the active version.</p>
   <div class="grid">
     ${SEL('Checklist style','preset',S.preset,[['ph','Philippine resume'],['us','Harvard / US'],['cv','Academic CV (multi-page)']],1)}
+    ${SEL('Font','font',S.font,[['times','Times New Roman'],['arial','Arial']])}
     ${SEL('Paper size','paper',S.paper,[['letter','Letter / short bond (8.5 x 11 in)'],['a4','A4']])}
     ${S.preset!=='ph'?'':SEL('Section order','order',S.order,[['edu','Education first (students, fresh grads)'],['exp','Experience first (experienced)']])}${S.preset!=='ph'?'':SEL('Declaration line at the end','declaration',S.declaration,[['none','None'],['certify','"True and correct" statement'],['consent','Statement + data privacy consent']],1)}</div></section>`;
 const aiCards=()=>`<section class="card"><h2>Tailor &amp; import</h2>
@@ -745,9 +767,20 @@ function loadLib(url){return loadedLibs[url]||(loadedLibs[url]=new Promise((res,
 function newPdf(){
   const J=window.jspdf.jsPDF,a4=S.paper==='a4',doc=new J({unit:'pt',format:a4?'a4':'letter'});
   const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),m=54,cw=W-2*m;let y=m;
-  const lh=z=>z*1.15,F=(st,z)=>{doc.setFont('times',st);doc.setFontSize(z);},clean=t=>String(t==null?'':t);
+  const lh=z=>z*1.15,FONT=S.font==='arial'?'helvetica':'times',F=(st,z)=>{doc.setFont(FONT,st);doc.setFontSize(z);},clean=t=>String(t==null?'':t);
   const room=h=>{if(y+h>H-m){doc.addPage();y=m;}};
   const marks=[];
+  const styleOf=(base,x)=>{const b=x.b||base==='bold'||base==='bolditalic',i=x.i||base==='italic'||base==='bolditalic';return b&&i?'bolditalic':b?'bold':i?'italic':'normal';};
+  const wrapRich=(text,base,avail,first)=>{
+    const words=[];parseRich(clean(text)).forEach(x=>{const st=styleOf(base,x);x.t.split(/(\s+)/).forEach(w=>{if(w)words.push({t:w,st:st});});});
+    const lines=[];let cur=[],wd=0,lim=first==null?avail:first;const sp=t=>/^\s+$/.test(t);
+    words.forEach(w=>{F(w.st,11);const ww=doc.getTextWidth(w.t);
+      if(sp(w.t)){if(cur.length){cur.push(w);wd+=ww;}return;}
+      if(wd+ww>lim&&cur.length){while(cur.length&&sp(cur[cur.length-1].t))cur.pop();lines.push(cur);cur=[];wd=0;lim=avail;}
+      cur.push(w);wd+=ww;});
+    if(cur.length)lines.push(cur);return lines;
+  };
+  const drawLine=(line,x,yy)=>{let cx=x;line.forEach(sg=>{F(sg.st,11);doc.text(sg.t,cx,yy);cx+=doc.getTextWidth(sg.t);});};
   return{
     center(t,z,st){F(st,z);doc.splitTextToSize(clean(t),cw).forEach(l=>{room(lh(z));doc.text(l,W/2,y+z*.92,{align:'center'});y+=lh(z);});},
     gap(n){y+=n;},
@@ -755,18 +788,15 @@ function newPdf(){
     info(){return{pages:doc.getNumberOfPages(),y:y,H:H,m:m,lh:lh(11),marks:marks};},
     heading(t){y+=8;room(lh(11)+6);marks.push({pg:doc.getNumberOfPages(),y:y});F('bold',11);doc.text(clean(t),m,y+11*.92);y+=lh(11);doc.setLineWidth(.5);doc.line(m,y+.5,W-m,y+.5);y+=3;},
     row(l,r,st){
-      F('normal',11);const rw=r?doc.getTextWidth(clean(r)):0;F(st,11);
-      const lines=doc.splitTextToSize(clean(l),cw-(rw?rw+12:0));
-      if(!lines.length)lines.push('');
-      lines.forEach((ln,i)=>{room(lh(11));F(st,11);doc.text(ln,m,y+11*.92);if(i===0&&r){F('normal',11);doc.text(clean(r),W-m,y+11*.92,{align:'right'});}y+=lh(11);});
+      const rr=stripRich(clean(r));F('normal',11);const rw=rr?doc.getTextWidth(rr):0;
+      const lines=wrapRich(l,st,cw-(rw?rw+12:0));
+      if(!lines.length)lines.push([]);
+      lines.forEach((ln,i)=>{room(lh(11));drawLine(ln,m,y+11*.92);if(i===0&&rr){F('normal',11);doc.text(rr,W-m,y+11*.92,{align:'right'});}y+=lh(11);});
     },
-    bullet(t){F('normal',11);doc.splitTextToSize(clean(t),cw-18).forEach((ln,i)=>{room(lh(11));if(i===0)doc.text('•',m+7,y+11*.92);doc.text(ln,m+18,y+11*.92);y+=lh(11);});},
+    bullet(t){wrapRich(t,'normal',cw-18).forEach((ln,i)=>{room(lh(11));if(i===0){F('normal',11);doc.text('•',m+7,y+11*.92);}drawLine(ln,m+18,y+11*.92);y+=lh(11);});},
     labeled(label,items){
-      F('bold',11);const lab=label?label+': ':'',lw=lab?doc.getTextWidth(lab):0;F('normal',11);
-      const words=clean(items).split(/\s+/).filter(Boolean),lines=[];let cur='',avail=cw-lw;
-      words.forEach(w=>{const t=cur?cur+' '+w:w;if(!cur||doc.getTextWidth(t)<=avail)cur=t;else{lines.push(cur);cur=w;avail=cw;}});
-      if(cur)lines.push(cur);
-      lines.forEach((ln,i)=>{room(lh(11));if(i===0&&lab){F('bold',11);doc.text(lab,m,y+11*.92);F('normal',11);doc.text(ln,m+lw,y+11*.92);}else{F('normal',11);doc.text(ln,m,y+11*.92);}y+=lh(11);});
+      F('bold',11);const lab=label?label+': ':'',lw=lab?doc.getTextWidth(lab):0;
+      wrapRich(items,'normal',cw,cw-lw).forEach((ln,i)=>{room(lh(11));if(i===0&&lab){F('bold',11);doc.text(lab,m,y+11*.92);drawLine(ln,m+lw,y+11*.92);}else drawLine(ln,m,y+11*.92);y+=lh(11);});
       y+=1;
     },
     para(t,o){o=o||{};const z=o.sz||11;y+=o.before||0;F(o.st||'normal',z);doc.splitTextToSize(clean(t),cw).forEach(ln=>{room(lh(z));doc.text(ln,m,y+z*.92);y+=lh(z);});},
@@ -790,7 +820,7 @@ function resumePdf(M){return buildResume(M).finish((M.name||'Resume')+' - Resume
 let pdfFitKey='',pdfFitVal=null;
 function pdfFit(M){
   if(!window.jspdf)return null;
-  const key=S.paper+JSON.stringify(M);if(key===pdfFitKey)return pdfFitVal;
+  const key=S.paper+'|'+S.font+'|'+JSON.stringify(M);if(key===pdfFitKey)return pdfFitVal;
   try{const i=buildResume(M).info(),usable=i.H-2*i.m,over=(i.pages-1)*usable+(i.y-i.m)-usable;
     pdfFitVal={pages:i.pages,over:Math.max(0,over),lines:Math.max(0,Math.ceil(over/i.lh)),usable:usable,total:(i.pages-1)*usable+(i.y-i.m),marks:i.marks.map(k=>(k.pg-1)*usable+(k.y-i.m))};}catch(e){pdfFitVal=null;}
   pdfFitKey=key;return pdfFitVal;
