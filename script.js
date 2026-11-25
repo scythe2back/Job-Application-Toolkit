@@ -1,4 +1,3 @@
-
 (function(){
 'use strict';
 const $=s=>document.querySelector(s);
@@ -124,7 +123,7 @@ const onField=e=>{
   const dd=e.target.dataset&&e.target.dataset.d;
   if(dd){setIn(D,dd,e.target.value);saveDocs();return;}
   const p=e.target.dataset&&e.target.dataset.p;if(!p)return;setPath(p,e.target.value);
-  if(p==='preset'){if(S.preset==='us')S.paper='letter';renderForm();if(tab==='ph')renderPhForm();}
+  if(p==='preset'){renderForm();if(tab==='ph')renderPhForm();}
   refresh();};
 $('#form').addEventListener('input',onField);
 $('#form').addEventListener('change',onField);
@@ -252,15 +251,15 @@ function runChecks(M,d){
   let pict=false;try{pict=/\p{Extended_Pictographic}/u.test(JSON.stringify(d));}catch(e){}
   if(pict)add('bad','Emoji or pictographs found. ATS parsers can drop or garble them.');
   if(M.name||M.sections.length){
-    const lim=dims().h-144;
+    const lim=dims().h-144;let pf=null;
     if(cv){const n=Math.max(1,Math.ceil(contentH/lim));add('ok',`About ${n} page${n>1?'s':''}. Academic CVs have no page limit; keep the most relevant work first.`);}
-    else if(contentH>lim)add('bad',`Runs about ${Math.ceil((contentH-lim)/17)} line(s) past one page. One page is the norm for students and early-career applicants: trim older or weaker bullets.`);
+    else if((pf=pdfFit(M))?pf.lines>0:contentH>lim)add('bad',`Runs about ${pf?pf.lines:Math.ceil((contentH-lim)/17)} line(s) past one page. One page is the norm for students and early-career applicants: trim older or weaker bullets.`);
     else add('ok','Fits on one page.');
   }
   if(cv){const bl=['publications','presentations','grants'].filter(id=>!has(id));if(bl.length)add('warn','Academic CVs usually list '+bl.join(', ').replace(/,([^,]*)$/,' and$1')+'. Add them if you have any.');}
   return out;
 }
-function renderChecks(M){drawChecks('#checks',runChecks(M,S),'#chipR');
+function renderChecks(M){const arr=runChecks(M,S);drawChecks('#checks',arr,'#chipR');$('#pgline').classList.toggle('over',S.preset!=='cv'&&arr.some(x=>x.l!=='ok'&&/past one page/i.test(x.t)));
   if(S.preset==='cv'){const n=Math.max(1,Math.ceil(contentH/(dims().h-144))),c=$('#chipR');c.className='chip ok';c.textContent='About '+n+' page'+(n>1?'s':'');}}
 
 /* ---------- exports ---------- */
@@ -339,8 +338,8 @@ $('#bDocx').onclick=async()=>{
 };
 $('#bTxt').onclick=()=>saveFile(base()+'.txt',toText(model(S)));
 $('#bCopy').onclick=async()=>{try{await navigator.clipboard.writeText(toText(model(S)));toast('Resume text copied');}catch(e){toast('Copy was blocked in this view.');}};
-$('#bSample').onclick=()=>{activeV().data=clone(S.preset==='cv'?SAMPLE_CV:SAMPLE);syncS();renderForm();refresh();toast('Sample loaded');};
-$('#bClear').onclick=()=>{activeV().data=clone(EMPTY);syncS();renderForm();refresh();};
+$('#bSample').onclick=()=>{const pk=S.paper;activeV().data=clone(S.preset==='cv'?SAMPLE_CV:SAMPLE);activeV().data.paper=pk;syncS();renderForm();refresh();toast('Sample loaded');};
+$('#bClear').onclick=()=>{const pk=S.paper,pr=S.preset;activeV().data=clone(EMPTY);activeV().data.paper=pk;activeV().data.preset=pr;if(pr==='cv'){activeV().data.refsMode='list';activeV().data.leadershipTitle='Research Experience';}syncS();renderForm();refresh();};
 
 function refresh(){
   if(tab==='resume'){const M=model(S);renderPreview(M);renderChecks(M);}
@@ -727,6 +726,8 @@ function newPdf(){
   return{
     center(t,z,st){F(st,z);doc.splitTextToSize(clean(t),cw).forEach(l=>{room(lh(z));doc.text(l,W/2,y+z*.92,{align:'center'});y+=lh(z);});},
     gap(n){y+=n;},
+    need(h){room(h);},
+    info(){return{pages:doc.getNumberOfPages(),y:y,H:H,m:m,lh:lh(11)};},
     heading(t){y+=8;room(lh(11)+6);F('bold',11);doc.text(clean(t),m,y+11*.92);y+=lh(11);doc.setLineWidth(.5);doc.line(m,y+.5,W-m,y+.5);y+=3;},
     row(l,r,st){
       F('normal',11);const rw=r?doc.getTextWidth(clean(r)):0;F(st,11);
@@ -747,13 +748,27 @@ function newPdf(){
     finish(title){doc.setProperties({title:title});return doc.output('blob');}
   };
 }
-function resumePdf(M){
+function buildResume(M){
   const w=newPdf();w.center(M.name||'Your Name',14,'bold');if(M.contact.length)w.center(M.contact.join(' | '),10,'normal');
-  M.sections.forEach(s=>{w.heading(s.title.toUpperCase());
-    if(s.entries)s.entries.forEach(e=>{w.gap(4);if(e.org||e.loc)w.row(e.org,e.loc,'bold');if(e.title||e.dates)w.row(e.title,e.dates,'italic');e.bullets.forEach(b=>w.bullet(b));});
+  const L=12.65;
+  M.sections.forEach(s=>{
+    const first=s.entries&&s.entries[0];
+    w.need(first?8+L+3+4+L*((first.org||first.loc?1:0)+(first.title||first.dates?1:0)+(first.bullets.length?1:0)):8+L*2);
+    w.heading(s.title.toUpperCase());
+    if(s.entries)s.entries.forEach(e=>{const n=(e.org||e.loc?1:0)+(e.title||e.dates?1:0)+(e.bullets.length?1:0);w.need(4+L*n);w.gap(4);if(e.org||e.loc)w.row(e.org,e.loc,'bold');if(e.title||e.dates)w.row(e.title,e.dates,'italic');e.bullets.forEach(b=>w.bullet(b));});
     if(s.skills)s.skills.forEach(k=>w.labeled(k.label,k.items));});
   (M.footer||[]).forEach(t=>w.para(t,{sz:10,st:'italic',before:8}));
-  return w.finish((M.name||'Resume')+' - Resume');
+  return w;
+}
+function resumePdf(M){return buildResume(M).finish((M.name||'Resume')+' - Resume');}
+/* Dry run of the PDF writer: tells the checklist exactly how far the real PDF runs past one page. */
+let pdfFitKey='',pdfFitVal=null;
+function pdfFit(M){
+  if(!window.jspdf)return null;
+  const key=S.paper+JSON.stringify(M);if(key===pdfFitKey)return pdfFitVal;
+  try{const i=buildResume(M).info(),usable=i.H-2*i.m,over=(i.pages-1)*usable+(i.y-i.m)-usable;
+    pdfFitVal={pages:i.pages,over:Math.max(0,over),lines:Math.max(0,Math.ceil(over/i.lh))};}catch(e){pdfFitVal=null;}
+  pdfFitKey=key;return pdfFitVal;
 }
 async function pdfDownload(kind){
   if(!window.jspdf){try{await loadLib(LIBS.jspdf);}catch(e){toast(e.message);return;}}
