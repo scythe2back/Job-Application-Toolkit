@@ -259,7 +259,18 @@ function runChecks(M,d){
   if(cv){const bl=['publications','presentations','grants'].filter(id=>!has(id));if(bl.length)add('warn','Academic CVs usually list '+bl.join(', ').replace(/,([^,]*)$/,' and$1')+'. Add them if you have any.');}
   return out;
 }
-function renderChecks(M){const arr=runChecks(M,S);drawChecks('#checks',arr,'#chipR');$('#pgline').classList.toggle('over',S.preset!=='cv'&&arr.some(x=>x.l!=='ok'&&/past one page/i.test(x.t)));
+/* Put the dashed page line where the exported PDF really breaks, by lining the PDF's section positions up with the preview's. */
+function placePageLine(over){
+  const pg=$('#pgline'),D=dims(),def=D.h-72;pg.style.top=def+'px';
+  const pf=over?pdfFit(model(S)):null,hs=[...document.querySelectorAll('#resume .r-h')];
+  if(!pf||!pf.marks||pf.marks.length!==hs.length||!hs.length)return;
+  const pts=[[0,72]].concat(pf.marks.map((a,i)=>[a,hs[i].offsetTop])).concat([[pf.total,72+contentH]]);
+  const t=pf.usable;let top=def;
+  for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1];if(t>=a[0]&&t<=b[0]){top=b[0]===a[0]?a[1]:a[1]+(t-a[0])/(b[0]-a[0])*(b[1]-a[1]);break;}}
+  pg.style.top=Math.round(top)+'px';
+}
+function renderChecks(M){const arr=runChecks(M,S);drawChecks('#checks',arr,'#chipR');const over=S.preset!=='cv'&&arr.some(x=>x.l!=='ok'&&/past one page/i.test(x.t));
+  $('#pgline').classList.toggle('over',over);placePageLine(over);
   if(S.preset==='cv'){const n=Math.max(1,Math.ceil(contentH/(dims().h-144))),c=$('#chipR');c.className='chip ok';c.textContent='About '+n+' page'+(n>1?'s':'');}}
 
 /* ---------- exports ---------- */
@@ -723,12 +734,13 @@ function newPdf(){
   const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),m=54,cw=W-2*m;let y=m;
   const lh=z=>z*1.15,F=(st,z)=>{doc.setFont('times',st);doc.setFontSize(z);},clean=t=>String(t==null?'':t);
   const room=h=>{if(y+h>H-m){doc.addPage();y=m;}};
+  const marks=[];
   return{
     center(t,z,st){F(st,z);doc.splitTextToSize(clean(t),cw).forEach(l=>{room(lh(z));doc.text(l,W/2,y+z*.92,{align:'center'});y+=lh(z);});},
     gap(n){y+=n;},
     need(h){room(h);},
-    info(){return{pages:doc.getNumberOfPages(),y:y,H:H,m:m,lh:lh(11)};},
-    heading(t){y+=8;room(lh(11)+6);F('bold',11);doc.text(clean(t),m,y+11*.92);y+=lh(11);doc.setLineWidth(.5);doc.line(m,y+.5,W-m,y+.5);y+=3;},
+    info(){return{pages:doc.getNumberOfPages(),y:y,H:H,m:m,lh:lh(11),marks:marks};},
+    heading(t){y+=8;room(lh(11)+6);marks.push({pg:doc.getNumberOfPages(),y:y});F('bold',11);doc.text(clean(t),m,y+11*.92);y+=lh(11);doc.setLineWidth(.5);doc.line(m,y+.5,W-m,y+.5);y+=3;},
     row(l,r,st){
       F('normal',11);const rw=r?doc.getTextWidth(clean(r)):0;F(st,11);
       const lines=doc.splitTextToSize(clean(l),cw-(rw?rw+12:0));
@@ -767,7 +779,7 @@ function pdfFit(M){
   if(!window.jspdf)return null;
   const key=S.paper+JSON.stringify(M);if(key===pdfFitKey)return pdfFitVal;
   try{const i=buildResume(M).info(),usable=i.H-2*i.m,over=(i.pages-1)*usable+(i.y-i.m)-usable;
-    pdfFitVal={pages:i.pages,over:Math.max(0,over),lines:Math.max(0,Math.ceil(over/i.lh))};}catch(e){pdfFitVal=null;}
+    pdfFitVal={pages:i.pages,over:Math.max(0,over),lines:Math.max(0,Math.ceil(over/i.lh)),usable:usable,total:(i.pages-1)*usable+(i.y-i.m),marks:i.marks.map(k=>(k.pg-1)*usable+(k.y-i.m))};}catch(e){pdfFitVal=null;}
   pdfFitKey=key;return pdfFitVal;
 }
 async function pdfDownload(kind){
