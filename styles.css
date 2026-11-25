@@ -135,6 +135,8 @@ button.big{min-height:40px;padding:0 22px;font-size:15px}
 .dlg{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;max-width:420px;width:100%;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px}
 .dlg h2{margin:0;font-size:16px}.dlg p{margin:0}
 a.btn{display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);text-decoration:none;font-weight:500;background:var(--card)}
+button.danger{background:var(--bad);border-color:var(--bad);color:#fff;font-weight:600}
+button.danger:hover{background:var(--bad);filter:brightness(1.1)}
 a.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font-weight:600}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 @media(max-width:900px){

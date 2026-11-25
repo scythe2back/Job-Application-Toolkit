@@ -320,6 +320,20 @@ let DL=null;
 (async()=>{try{DL=(window.claude&&window.claude.use)?await window.claude.use('downloads'):null;}catch(e){DL=null;}})();
 let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2800);}
 const MIME={pdf:'application/pdf',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',txt:'text/plain;charset=utf-8',csv:'text/csv;charset=utf-8'};
+function askConfirm(title,msg,okLabel){
+  return new Promise(res=>{
+    const prev=document.activeElement;
+    const o=document.createElement('div');o.className='overlay';o.setAttribute('role','alertdialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-labelledby','cfT');
+    o.innerHTML='<div class="dlg"><h2 id="cfT"></h2><p class="cfm"></p><div class="toolbar" style="justify-content:flex-end"><button id="cfNo">Cancel</button><button id="cfYes" class="danger"></button></div></div>';
+    o.querySelector('#cfT').textContent=title;o.querySelector('.cfm').textContent=msg;o.querySelector('#cfYes').textContent=okLabel||'Delete';
+    const done=v=>{document.removeEventListener('keydown',key,true);o.remove();if(prev&&prev.focus)prev.focus();res(v);};
+    const key=e=>{if(e.key==='Escape'){e.stopPropagation();done(false);}};
+    document.addEventListener('keydown',key,true);
+    o.querySelector('#cfNo').onclick=()=>done(false);o.querySelector('#cfYes').onclick=()=>done(true);
+    o.addEventListener('click',e=>{if(e.target===o)done(false);});
+    document.body.appendChild(o);o.querySelector('#cfNo').focus();
+  });
+}
 function fallbackSave(name,data){
   const ext=(name.split('.').pop()||'').toLowerCase();
   const blob=data instanceof Blob?data:new Blob([data],{type:MIME[ext]||'application/octet-stream'});
@@ -350,7 +364,7 @@ $('#bDocx').onclick=async()=>{
 $('#bTxt').onclick=()=>saveFile(base()+'.txt',toText(model(S)));
 $('#bCopy').onclick=async()=>{try{await navigator.clipboard.writeText(toText(model(S)));toast('Resume text copied');}catch(e){toast('Copy was blocked in this view.');}};
 $('#bSample').onclick=()=>{const pk=S.paper;activeV().data=clone(S.preset==='cv'?SAMPLE_CV:SAMPLE);activeV().data.paper=pk;syncS();renderForm();refresh();toast('Sample loaded');};
-$('#bClear').onclick=()=>{const pk=S.paper,pr=S.preset;activeV().data=clone(EMPTY);activeV().data.paper=pk;activeV().data.preset=pr;if(pr==='cv'){activeV().data.refsMode='list';activeV().data.leadershipTitle='Research Experience';}syncS();renderForm();refresh();};
+$('#bClear').onclick=async()=>{if(!await askConfirm('Clear this resume?','Every field in "'+activeV().name+'" will be emptied. Your other versions are not affected.','Clear all'))return;const pk=S.paper,pr=S.preset;activeV().data=clone(EMPTY);activeV().data.paper=pk;activeV().data.preset=pr;if(pr==='cv'){activeV().data.refsMode='list';activeV().data.leadershipTitle='Research Experience';}syncS();renderForm();refresh();};
 
 function refresh(){
   if(tab==='resume'){const M=model(S);renderPreview(M);renderChecks(M);}
@@ -561,7 +575,7 @@ $('#eCopyBody').onclick=()=>copyText(emailModel().body,'Body copied');
 $('#eCopyAll').onclick=()=>copyText(emailText(emailModel()),'Email copied');
 $('#eTxt').onclick=()=>saveFile(base().replace(/_Resume$/,'')+'_Email.txt',emailText(emailModel()));
 const loadDocSample=()=>{D=DSAMPLE();renderCoverForm();renderEmailForm();refreshActive();saveDocs();toast('Sample loaded');};
-const clearDocs=()=>{D=DEMPTY();renderCoverForm();renderEmailForm();refreshActive();saveDocs();};
+const clearDocs=async()=>{if(!await askConfirm('Clear the cover letter and email?','The job target and all cover letter and email fields will be emptied.','Clear all'))return;D=DEMPTY();renderCoverForm();renderEmailForm();refreshActive();saveDocs();};
 $('#cSample').onclick=loadDocSample;$('#eSample').onclick=loadDocSample;$('#cClear').onclick=clearDocs;$('#eClear').onclick=clearDocs;
 
 /* ===== UI: menus, accordions, mobile view toggle ===== */
@@ -648,8 +662,7 @@ $('#form').addEventListener('click',e=>{
     else if(act==='dup')addVersion({id:uid(),name:activeV().name+' (copy)',data:clone(S)});
     else if(act==='del'){
       if(V.list.length<2){toast('Keep at least one version.');return;}
-      if(Date.now()-delArm<3000){V.list=V.list.filter(v=>v.id!==V.active);V.active=V.list[0].id;syncS();renderForm();refresh();saveV();toast('Version deleted');}
-      else{delArm=Date.now();toast('Click Delete again within 3 seconds to confirm');}
+      askConfirm('Delete this version?','"'+activeV().name+'" will be removed. Your other versions are not affected.','Delete').then(ok=>{if(!ok)return;V.list=V.list.filter(v=>v.id!==V.active);V.active=V.list[0].id;syncS();renderForm();refresh();saveV();toast('Version deleted');});
     }
     return;
   }
@@ -947,8 +960,7 @@ let tDelArm='';
 $('#tTable').addEventListener('click',e=>{
   const b=e.target.closest('[data-ta]');if(!b)return;const r=rowOf(b);if(!r)return;
   if(b.dataset.ta==='del'){
-    if(tDelArm===r.id){T=T.filter(x=>x!==r);tDelArm='';saveT();renderTracker();}
-    else{tDelArm=r.id;toast('Click the x again to delete this row');setTimeout(()=>{if(tDelArm===r.id)tDelArm='';},3000);}
+    askConfirm('Delete this application?',(r.company||'This row')+(r.role?' ('+r.role+')':'')+' will be removed.','Delete').then(ok=>{if(ok){T=T.filter(x=>x!==r);saveT();renderTracker();}});
   }else if(b.dataset.ta==='mail'){
     D.job.company=r.company;D.job.position=r.role;D.email.type='followup';D.email.date=longDate(r.applied);saveDocs();showTab('email');
   }
@@ -961,7 +973,7 @@ $('#tFromJob').onclick=()=>{
 $('#tSort').onclick=()=>{T.sort((a,b)=>(a.follow||'9999').localeCompare(b.follow||'9999'));saveT();renderTracker();};
 $('#tSample').onclick=()=>{T=tSample();saveT();renderTracker();toast('Sample loaded');};
 let tClearArm=0;
-$('#tClear').onclick=()=>{if(Date.now()-tClearArm<3000){T=[];saveT();renderTracker();}else{tClearArm=Date.now();toast('Click Clear all again within 3 seconds to confirm');}};
+$('#tClear').onclick=async()=>{if(!T.length)return;if(await askConfirm('Delete all applications?',T.length+' tracked application'+(T.length>1?'s':'')+' will be removed. This cannot be undone.','Delete all')){T=[];saveT();renderTracker();}};
 $('#tCsv').onclick=()=>{
   const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
   const rows=[['Company','Role','Applied','Status','Follow up','Notes']].concat(T.map(r=>[r.company,r.role,r.applied,r.status,r.follow,r.notes]));
