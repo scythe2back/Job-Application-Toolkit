@@ -326,7 +326,7 @@ async function buildDocx(M,bodyXml){
 let DL=null;
 (async()=>{try{DL=(window.claude&&window.claude.use)?await window.claude.use('downloads'):null;}catch(e){DL=null;}})();
 let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2800);}
-const MIME={pdf:'application/pdf',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',txt:'text/plain;charset=utf-8',csv:'text/csv;charset=utf-8'};
+const MIME={pdf:'application/pdf',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',txt:'text/plain;charset=utf-8',csv:'text/csv;charset=utf-8',ics:'text/calendar;charset=utf-8'};
 function askConfirm(title,msg,okLabel){
   return new Promise(res=>{
     const prev=document.activeElement;
@@ -969,7 +969,8 @@ function tSample(){const t=todayISO();return[
 let T=null;try{T=JSON.parse(localStorage.getItem(TK)||'null');}catch(e){}
 if(!Array.isArray(T))T=[];
 const saveT=()=>{try{localStorage.setItem(TK,JSON.stringify(T));}catch(e){}};
-const isDue=r=>['Applied','Assessment','Interview','Final interview'].indexOf(r.status)>=0&&!!r.follow&&r.follow<=todayISO();
+const OPEN_STAT=['Applied','Assessment','Interview','Final interview'];
+const isDue=r=>OPEN_STAT.indexOf(r.status)>=0&&!!r.follow&&r.follow<=todayISO();
 /* Details panel: extra fields shown under a row, so the table stays narrow. */
 const tOpen=new Set();
 const SETUPS=['','On-site','Hybrid','Remote'];
@@ -1061,6 +1062,43 @@ $('#tSample').onclick=async()=>{
 };
 let tClearArm=0;
 $('#tClear').onclick=async()=>{if(!T.length)return;if(await askConfirm('Delete all applications?',T.length+' tracked application'+(T.length>1?'s':'')+' will be removed. This cannot be undone.','Delete all')){T=[];saveT();renderTracker();}};
+/* Calendar file (.ics) with open follow-ups and upcoming interviews. Times are "floating": the calendar shows them in the device's own time zone. */
+const icsText=v=>String(v==null?'':v).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r\n|\r|\n/g,'\\n');
+/* The format limits lines to 75 bytes. Longer ones continue on the next line after a space. */
+function icsFold(line){
+  const enc=new TextEncoder();let out='',len=0;
+  for(const ch of line){const n=enc.encode(ch).length;if(len+n>75){out+='\r\n ';len=1;}out+=ch;len+=n;}
+  return out;
+}
+function calendarEvents(){
+  const today=todayISO(),ymd=v=>v.replace(/[-:]/g,'');
+  const name=r=>(r.company||'[company]')+(r.role?' ('+r.role+')':'');
+  const about=r=>[['Status',r.status],['Contact',[r.contact,r.contactInfo].filter(Boolean).join(', ')],['Job link',r.jobUrl],['Notes',r.notes]].filter(x=>x[1]).map(x=>x[0]+': '+x[1]).join('\n');
+  const alarm=(trigger,text)=>['BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsText(text),'TRIGGER:'+trigger,'END:VALARM'];
+  const out=[];
+  T.filter(r=>r.follow&&OPEN_STAT.indexOf(r.status)>=0).forEach(r=>{
+    /* An overdue follow-up goes on today, where it will still be seen. */
+    const day=r.follow<today?today:r.follow,title='Follow up: '+name(r);
+    out.push({uid:r.id+'-follow',lines:['SUMMARY:'+icsText(title),'DTSTART;VALUE=DATE:'+ymd(day),'DTEND;VALUE=DATE:'+ymd(addDays(day,1)),'DESCRIPTION:'+icsText(about(r))].concat(alarm('PT9H',title))});
+  });
+  upcoming().forEach(r=>{
+    const title='Interview: '+name(r),start=ymd(r.interview.slice(0,16))+'00';
+    out.push({uid:r.id+'-interview',lines:['SUMMARY:'+icsText(title),'DTSTART:'+start,'DURATION:PT1H','DESCRIPTION:'+icsText(about(r))].concat(r.location?['LOCATION:'+icsText(r.location)]:[],alarm('-P1D',title),alarm('-PT1H',title))});
+  });
+  return out;
+}
+function calendarFile(events){
+  const stamp=new Date().toISOString().replace(/[-:]|\.\d{3}/g,'');
+  const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Job Application Toolkit//Tracker//EN','CALSCALE:GREGORIAN'];
+  events.forEach(ev=>{L.push('BEGIN:VEVENT','UID:'+ev.uid+'@job-application-toolkit','DTSTAMP:'+stamp,...ev.lines,'END:VEVENT');});
+  L.push('END:VCALENDAR');
+  return L.map(icsFold).join('\r\n')+'\r\n';
+}
+$('#tIcs').onclick=()=>{
+  const ev=calendarEvents();
+  if(!ev.length){toast('No follow-ups or upcoming interviews to add.');return;}
+  saveFile('job_reminders.ics',calendarFile(ev));
+};
 $('#tCsv').onclick=()=>{
   /* A leading =, +, - or @ gets an apostrophe so spreadsheets show it as text instead of running it as a formula. */
   const q=v=>'"'+String(v==null?'':v).replace(/^(?=[=+\-@\t\r])/,"'").replace(/"/g,'""')+'"';
