@@ -166,3 +166,31 @@ a.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font
   h1 .wm span{display:none}
 }
 @media(max-width:560px){.grid{grid-template-columns:1fr}input,textarea,select{font-size:16px}}
+/* Tracker on narrow screens: each application becomes a card, so nothing scrolls sideways. */
+@media(max-width:900px){
+  #paneTracker .bar .sp{order:1}
+  #paneTracker .bar .menu{order:2}
+  .tt,.tt tbody{display:block}
+  .tt thead{display:none}
+  .tt tbody tr:not(.t-det){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding:12px;border:1px solid var(--line);border-radius:8px;margin-top:10px}
+  .tt tbody tr:first-child{margin-top:0}
+  .tt tbody tr.due{background:var(--due)}
+  .tt tbody tr>td,.tt tr.due td{display:block;min-width:0;padding:0;border:0;background:none}
+  .tt td[data-label]::before{content:attr(data-label);display:block;margin-bottom:2px;font-size:11px;font-weight:600;color:var(--mute)}
+  .tt td.c-wide{grid-column:1/-1}
+  /* Status comes before the two dates, so the dates sit side by side. */
+  .tt td.c-applied,.tt td.c-follow{order:1}
+  .tt td.c-wide:nth-child(n+6){order:2}
+  .tt input,.tt select{min-width:0;min-height:40px;font-size:16px}
+  .tt input:not([type]){min-width:0}
+  .t-actions{min-width:0;justify-content:flex-start;gap:8px}
+  .t-actions button{min-height:40px}
+  .t-actions .t-due{display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:100%}
+  .t-actions .t-due:empty{display:none}
+  .t-actions [data-ta="del"]{margin-left:auto;min-width:40px}
+  .tt tbody tr.t-det{display:block;border:1px solid var(--line);border-top:0;border-radius:0 0 8px 8px;background:var(--sunk)}
+  .tt tbody tr.t-det>td{padding:12px}
+  .tt tbody tr:has(+tr.t-det){border-radius:8px 8px 0 0}
+}
+@media(max-width:560px){#tSearch{order:3;flex-basis:100%}}
+@media(max-width:359px){.tt td.c-applied,.tt td.c-follow{grid-column:1/-1}}
