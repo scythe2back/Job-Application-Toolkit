@@ -184,7 +184,7 @@ a.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font
 /* Applications: fields share one set of columns, and the buttons get their own line underneath. */
 #tTable>.hint:only-child{margin:0}
 .tt,.tt thead,.tt tbody{display:block;width:100%;font-size:13px}
-.tt tr{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1.2fr) 148px 200px 148px minmax(0,1.4fr);gap:8px;align-items:start}
+.tt tr{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1.2fr) 148px 200px 148px minmax(256px,1.4fr);gap:8px;align-items:start}
 .tt th{padding:0 0 8px;text-align:left;font-size:11px;font-weight:600;color:var(--mute);white-space:nowrap}
 .tt th:last-child{display:none}
 .tt thead tr{padding:0 8px;border-bottom:1px solid var(--line)}
@@ -195,10 +195,10 @@ a.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font
 .tt tbody tr:last-child{border-bottom:0}
 .tt tbody tr.due{background:var(--due)}
 .tt td.c-actions{grid-column:1/-1;display:grid;grid-template-columns:subgrid}
-/* The buttons start where "Follow up" starts and end where "Notes" ends. */
+/* The buttons sit under Notes and share its width. Details takes only the space the others leave. */
 .t-actions{grid-column:1/-1;display:grid;grid-template-columns:subgrid;align-items:center;gap:8px}
-.t-btns{grid-column:5/-1;grid-row:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(max-content,1fr) 34px;gap:8px}
-.t-actions button{white-space:nowrap;height:34px;padding:0 8px}
+.t-btns{grid-column:6;grid-row:1;display:grid;grid-template-columns:minmax(0,1fr) max-content 34px;gap:8px}
+.t-actions button{white-space:nowrap;height:34px;padding:0 8px;font-size:13px}
 .t-actions [data-ta="del"]{padding:0}
 .t-due{grid-column:1/5;grid-row:1;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .tt tbody tr:has(+tr.t-det){border-bottom:0}
@@ -208,14 +208,14 @@ a.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font
 .t-det textarea{height:auto}
 .t-link:empty{display:none}
 @media(max-width:1100px){
-  .tt tr{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 132px 192px 132px minmax(0,1fr)}
+  .tt tr{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 132px 192px 132px minmax(256px,1fr)}
 }
 @media(max-width:980px){
   #paneTracker .chips{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
 }
 /* The interview time sits on the same line as the buttons, so every row is the same height.
    The "Follow up now" message and the buttons leave the Status column free for it. */
-@media(min-width:1040px){
+@media(min-width:1041px){
   .tt tbody tr:has([data-t="interview"])>td:nth-child(1){grid-column:1;grid-row:1}
   .tt tbody tr:has([data-t="interview"])>td:nth-child(2){grid-column:2;grid-row:1}
   .tt tbody tr:has([data-t="interview"])>td:nth-child(3){grid-column:3;grid-row:1}
@@ -227,7 +227,7 @@ a.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font
   .t-due{grid-column:1/4}
 }
 /* Narrow screens: each application becomes a card, so nothing scrolls sideways. */
-@media(max-width:900px){
+@media(max-width:1040px){
   #paneTracker .bar .sp{order:1}
   #paneTracker .bar .menu{order:2}
   #tCard:has(.tt){padding:0;border:0;background:none}
@@ -244,7 +244,7 @@ a.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font
   .t-actions button{height:40px;min-height:40px}
   .tt td.c-actions{display:block}
   .t-actions{display:flex;flex-direction:column;align-items:stretch}
-  .t-btns{grid-template-columns:minmax(0,1fr) minmax(max-content,1fr) 40px}
+  .t-btns{grid-template-columns:104px max-content 40px;justify-content:end}
   .t-due:empty{display:none}
   .t-det .grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
   .tt tbody tr.t-det{border:1px solid var(--line);border-top:0;border-radius:0 0 10px 10px}
