@@ -370,7 +370,11 @@ $('#bDocx').onclick=async()=>{
 };
 $('#bTxt').onclick=()=>saveFile(base()+'.txt',toText(model(S)));
 $('#bCopy').onclick=async()=>{try{await navigator.clipboard.writeText(toText(model(S)));toast('Resume text copied');}catch(e){toast('Copy was blocked in this view.');}};
-$('#bSample').onclick=()=>{const pk=S.paper,fk=S.font;activeV().data=clone(S.preset==='cv'?SAMPLE_CV:SAMPLE);activeV().data.paper=pk;activeV().data.font=fk;syncS();renderForm();refresh();toast('Sample loaded');};
+/* "Load sample" asks first, unless there is nothing to lose: the fields are blank or already hold the sample. */
+const SETTINGS=['preset','paper','font','order','refsMode','declaration','leadershipTitle','type','tone','attachCover','date'];
+const typed=o=>Object.keys(o||{}).sort().map(k=>SETTINGS.indexOf(k)>=0?'':o[k]&&typeof o[k]==='object'?typed(o[k]):String(o[k]||'').trim()).join('');
+const wouldLose=(now,sample)=>!!typed(now)&&typed(now)!==typed(sample);
+$('#bSample').onclick=async()=>{if(wouldLose(S,norm(clone(S.preset==='cv'?SAMPLE_CV:SAMPLE)))&&!await askConfirm('Replace this resume with the sample?','What you typed in "'+activeV().name+'" will be replaced. Your other versions are not affected.','Replace'))return;const pk=S.paper,fk=S.font;activeV().data=clone(S.preset==='cv'?SAMPLE_CV:SAMPLE);activeV().data.paper=pk;activeV().data.font=fk;syncS();renderForm();refresh();toast('Sample loaded');};
 $('#bClear').onclick=async()=>{if(!await askConfirm('Clear this resume?','Every field in "'+activeV().name+'" will be emptied. Your other versions are not affected.','Clear all'))return;const pk=S.paper,pr=S.preset,fk=S.font;activeV().data=clone(EMPTY);activeV().data.paper=pk;activeV().data.font=fk;activeV().data.preset=pr;if(pr==='cv'){activeV().data.refsMode='list';activeV().data.leadershipTitle='Research Experience';}syncS();renderForm();refresh();};
 
 function refresh(){
@@ -581,7 +585,7 @@ $('#eCopySub').onclick=()=>copyText(emailModel().subject,'Subject copied');
 $('#eCopyBody').onclick=()=>copyText(emailModel().body,'Body copied');
 $('#eCopyAll').onclick=()=>copyText(emailText(emailModel()),'Email copied');
 $('#eTxt').onclick=()=>saveFile(base().replace(/_Resume$/,'')+'_Email.txt',emailText(emailModel()));
-const loadDocSample=()=>{D=DSAMPLE();renderCoverForm();renderEmailForm();refreshActive();saveDocs();toast('Sample loaded');};
+const loadDocSample=async()=>{if(wouldLose(D,DSAMPLE())&&!await askConfirm('Replace your cover letter and email with the sample?','What you typed in the job target, cover letter and email fields will be replaced.','Replace'))return;D=DSAMPLE();renderCoverForm();renderEmailForm();refreshActive();saveDocs();toast('Sample loaded');};
 const clearDocs=async()=>{if(!await askConfirm('Clear the cover letter and email?','The job target and all cover letter and email fields will be emptied.','Clear all'))return;D=DEMPTY();renderCoverForm();renderEmailForm();refreshActive();saveDocs();};
 $('#cSample').onclick=loadDocSample;$('#eSample').onclick=loadDocSample;$('#cClear').onclick=clearDocs;$('#eClear').onclick=clearDocs;
 
