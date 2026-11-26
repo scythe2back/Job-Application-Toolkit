@@ -961,54 +961,111 @@ const isoLocal=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-
 const todayISO=()=>isoLocal(new Date());
 const addDays=(iso,n)=>{const d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+n);return isoLocal(d);};
 const longDate=iso=>iso?new Date(iso+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}):'';
-const STAT=['Wishlist','Applied','Interview','Offer','Rejected','Withdrawn'];
+const STAT=['Wishlist','Applied','Assessment','Interview','Final interview','Offer','Rejected','Withdrawn'];
 function tSample(){const t=todayISO();return[
-  {id:uid(),company:'Sample Cyber Defense Corp.',role:'Junior Security Analyst',applied:addDays(t,-9),status:'Applied',follow:addDays(t,-2),notes:'Applied through the careers page'},
-  {id:uid(),company:'Sample Bank Inc.',role:'SOC Analyst (L1)',applied:addDays(t,-4),status:'Interview',follow:addDays(t,3),notes:'Technical interview scheduled'},
+  {id:uid(),company:'Sample Cyber Defense Corp.',role:'Junior Security Analyst',applied:addDays(t,-9),status:'Applied',follow:addDays(t,-2),notes:'Applied through the careers page',source:'Company careers page',location:'Makati City',setup:'Hybrid'},
+  {id:uid(),company:'Sample Bank Inc.',role:'SOC Analyst (L1)',applied:addDays(t,-4),status:'Interview',follow:addDays(t,3),interview:addDays(t,2)+'T10:00',notes:'Technical interview scheduled'},
   {id:uid(),company:'Sample IT Services',role:'IT Security Technician',applied:addDays(t,-1),status:'Applied',follow:addDays(t,6),notes:''}];}
 let T=null;try{T=JSON.parse(localStorage.getItem(TK)||'null');}catch(e){}
-if(!Array.isArray(T))T=tSample();
+if(!Array.isArray(T))T=[];
 const saveT=()=>{try{localStorage.setItem(TK,JSON.stringify(T));}catch(e){}};
-const isDue=r=>['Applied','Interview'].indexOf(r.status)>=0&&!!r.follow&&r.follow<=todayISO();
-function renderTracker(){
+const isDue=r=>['Applied','Assessment','Interview','Final interview'].indexOf(r.status)>=0&&!!r.follow&&r.follow<=todayISO();
+/* Details panel: extra fields shown under a row, so the table stays narrow. */
+const tOpen=new Set();
+const SETUPS=['','On-site','Hybrid','Remote'];
+/* Only web addresses become clickable. "example.com/job" is treated as https. */
+const jobHref=v=>{v=String(v||'').trim();if(/^https?:\/\/\S+$/i.test(v))return v;return /^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(v)?'https://'+v:'';};
+const linkHtml=r=>{const h=jobHref(r.jobUrl);return h?`<a class="btn" href="${esc(h)}" target="_blank" rel="noopener noreferrer">Open job link</a>`:'';};
+const hasDetails=r=>['jobUrl','source','salary','location','setup','contact','contactInfo','posting'].some(k=>String(r[k]||'').trim());
+function detailsHtml(r){
+  const inp=(label,key,full)=>`<label class="f ${full?'full':''}"><span>${label}</span><input data-t="${key}" value="${esc(r[key])}" autocomplete="off"></label>`;
+  return `<tr class="t-det" id="det-${r.id}" data-id="${r.id}"><td colspan="7"><div class="grid">
+    ${inp('Job link','jobUrl',1)}<div class="full t-link">${linkHtml(r)}</div>
+    ${inp('Where you found the job','source')}${inp('Salary or range','salary')}${inp('Location','location')}
+    <label class="f"><span>Work setup</span><select data-t="setup">${SETUPS.map(x=>`<option value="${x}"${x===(r.setup||'')?' selected':''}>${x||'Not set'}</option>`).join('')}</select></label>
+    ${inp('Contact person','contact')}${inp('Contact email or phone','contactInfo')}
+    <label class="f full"><span>Job posting (paste it here, since postings get taken down)</span><textarea data-t="posting" rows="6">${esc(r.posting)}</textarea></label></div></td></tr>`;
+}
+const detailsLabel=r=>(tOpen.has(r.id)?'Hide details':'Details')+(!tOpen.has(r.id)&&hasDetails(r)?' •':'');
+/* Search and status filter. Not saved: the full list shows again after a reload. */
+let tFilter='all',tQuery='';
+const matches=r=>(tFilter==='all'||(tFilter==='due'?isDue(r):r.status===tFilter))&&
+  (!tQuery||[r.company,r.role,r.notes,r.source,r.location,r.contact].join(' ').toLowerCase().indexOf(tQuery)>=0);
+function resetFilters(){tFilter='all';tQuery='';$('#tSearch').value='';}
+/* Interviews from today onward for applications that are still open, soonest first. */
+const upcoming=()=>T.filter(r=>r.interview&&r.interview.slice(0,10)>=todayISO()&&['Rejected','Withdrawn'].indexOf(r.status)<0).sort((a,b)=>a.interview.localeCompare(b.interview));
+const whenText=v=>new Date(v).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
+const showsInterview=r=>/interview/i.test(r.status)||!!r.interview;
+function renderSummary(){
   const counts={};STAT.forEach(x=>{counts[x]=0;});T.forEach(r=>{counts[r.status]=(counts[r.status]||0)+1;});
   const due=T.filter(isDue).length;
-  $('#tSummary').innerHTML=`<div class="chips">${STAT.map(x=>`<span class="badge">${x}: ${counts[x]}</span>`).join('')}<span class="badge ${due?'due':''}">Follow-ups due: ${due}</span></div><p class="hint" style="margin:8px 0 0">Follow-up dates default to one week after you apply. Rows turn orange when a follow-up is due. This list is saved in this browser only, so download the .csv now and then as a backup.</p>`;
-  $('#tTable').innerHTML=T.length?`<table class="tt"><thead><tr><th>Company</th><th>Role</th><th>Applied</th><th>Status</th><th>Follow up</th><th>Notes</th><th></th></tr></thead><tbody>${T.map(r=>`<tr class="${isDue(r)?'due':''}" data-id="${r.id}">
+  const chip=(key,label,cls)=>`<button type="button" class="badge ${cls||''}" data-tf="${key}" aria-pressed="${tFilter===key}">${label}</button>`;
+  const next=upcoming();
+  const soon=next.length?`<div class="upcoming"><b>Upcoming interviews</b><ul>${next.map(r=>`<li><b>${esc(whenText(r.interview))}</b> &ndash; ${esc(r.company||'[company]')}${r.role?' ('+esc(r.role)+')':''}</li>`).join('')}</ul></div>`:'';
+  $('#tSummary').innerHTML=soon+`<div class="chips" role="group" aria-label="Filter by status">${chip('all','All: '+T.length)}${STAT.map(x=>chip(x,x+': '+counts[x])).join('')}${chip('due','Follow-ups due: '+due,due?'due':'')}</div><p class="hint" style="margin:8px 0 0">Click a count to filter the list. Follow-up dates default to one week after you apply. Rows turn orange when a follow-up is due. This list is saved in this browser only, so download the .csv now and then as a backup.</p>`;
+}
+function renderTracker(){
+  renderSummary();
+  const list=T.filter(matches);
+  $('#tTable').innerHTML=list.length?`<table class="tt"><thead><tr><th>Company</th><th>Role</th><th>Applied</th><th>Status</th><th>Follow up</th><th>Notes</th><th></th></tr></thead><tbody>${list.map(r=>`<tr class="${isDue(r)?'due':''}" data-id="${r.id}">
     <td><input data-t="company" value="${esc(r.company)}"></td><td><input data-t="role" value="${esc(r.role)}"></td>
     <td><input type="date" data-t="applied" value="${esc(r.applied)}"></td>
-    <td><select data-t="status">${STAT.map(x=>`<option${x===r.status?' selected':''}>${x}</option>`).join('')}</select></td>
+    <td><select data-t="status">${STAT.map(x=>`<option${x===r.status?' selected':''}>${x}</option>`).join('')}</select>${showsInterview(r)?`<input type="datetime-local" data-t="interview" value="${esc(r.interview)}" aria-label="Interview date and time" title="Interview date and time">`:''}</td>
     <td><input type="date" data-t="follow" value="${esc(r.follow)}"></td><td><input data-t="notes" value="${esc(r.notes)}"></td>
-    <td style="white-space:nowrap">${isDue(r)?'<span class="badge due">Follow up now</span> ':''}<button data-ta="mail">Follow-up email</button> <button data-ta="del" title="Delete">&times;</button></td></tr>`).join('')}</tbody></table>`:'<p class="hint">No applications yet. Click "+ Add application".</p>';
+    <td><div class="t-actions"><span class="t-due">${dueHtml(r)}</span><button data-ta="details" aria-expanded="${tOpen.has(r.id)}"${tOpen.has(r.id)?` aria-controls="det-${r.id}"`:''}>${detailsLabel(r)}</button> <button data-ta="mail">Follow-up email</button> <button data-ta="del" title="Delete" aria-label="Delete">&times;</button></div></td></tr>${tOpen.has(r.id)?detailsHtml(r):''}`).join('')}</tbody></table>`:T.length?'<p class="hint">No applications match this search or filter.</p>':'<p class="hint">No applications yet.</p><div class="toolbar"><button class="pri" data-te="add">+ Add application</button><button data-te="sample">Load sample</button></div>';
 }
+$('#tTable').addEventListener('click',e=>{const b=e.target.closest('[data-te]');if(b)$(b.dataset.te==='add'?'#tAdd':'#tSample').click();});
+$('#tSearch').addEventListener('input',e=>{tQuery=e.target.value.trim().toLowerCase();renderTracker();});
+$('#tSummary').addEventListener('click',e=>{const b=e.target.closest('[data-tf]');if(!b)return;tFilter=b.dataset.tf;renderTracker();const n=$('#tSummary [data-tf="'+tFilter+'"]');if(n)n.focus();});
 const rowOf=el=>{const tr=el.closest('tr');return tr?T.find(x=>x.id===tr.dataset.id):null;};
-$('#tTable').addEventListener('input',e=>{const f=e.target.dataset&&e.target.dataset.t;const r=f&&rowOf(e.target);if(!r)return;r[f]=e.target.value;saveT();});
+$('#tTable').addEventListener('input',e=>{const f=e.target.dataset&&e.target.dataset.t;const r=f&&rowOf(e.target);if(!r)return;r[f]=e.target.value;saveT();
+  if(f==='jobUrl')e.target.closest('tr').querySelector('.t-link').innerHTML=linkHtml(r);});
 $('#tTable').addEventListener('change',e=>{
   const f=e.target.dataset&&e.target.dataset.t;const r=f&&rowOf(e.target);if(!r)return;
   r[f]=e.target.value;if(f==='applied'&&e.target.value&&!r.follow)r.follow=addDays(e.target.value,7);
-  saveT();if(f==='applied'||f==='follow'||f==='status')renderTracker();
+  saveT();
+  /* Date fields fire "change" while a date is still being typed, so only update around them to keep the cursor in place. */
+  if(f==='status'){renderTracker();const n=$('#tTable tr[data-id="'+r.id+'"] [data-t="status"]');if(n)n.focus();}
+  else if(f==='applied'||f==='follow'||f==='interview'){renderSummary();paintRow(r);}
 });
+function paintRow(r){
+  const tr=$('#tTable tr[data-id="'+r.id+'"]:not(.t-det)');if(!tr)return;
+  tr.classList.toggle('due',isDue(r));
+  const f=tr.querySelector('[data-t="follow"]');if(f&&f!==document.activeElement)f.value=r.follow||'';
+  tr.querySelector('.t-due').innerHTML=dueHtml(r);
+}
+const dueHtml=r=>isDue(r)?'<span class="badge due">Follow up now</span> <button data-ta="done" title="Set the next follow-up one week from today">Followed up</button> ':'';
 let tDelArm='';
 $('#tTable').addEventListener('click',e=>{
   const b=e.target.closest('[data-ta]');if(!b)return;const r=rowOf(b);if(!r)return;
   if(b.dataset.ta==='del'){
     askConfirm('Delete this application?',(r.company||'This row')+(r.role?' ('+r.role+')':'')+' will be removed.','Delete').then(ok=>{if(ok){T=T.filter(x=>x!==r);saveT();renderTracker();}});
+  }else if(b.dataset.ta==='details'){
+    if(!tOpen.delete(r.id))tOpen.add(r.id);
+    renderTracker();const n=$('#tTable tr[data-id="'+r.id+'"] [data-ta="details"]');if(n)n.focus();
+  }else if(b.dataset.ta==='done'){
+    r.follow=addDays(todayISO(),7);saveT();renderSummary();paintRow(r);toast('Next follow-up: '+longDate(r.follow));
   }else if(b.dataset.ta==='mail'){
     D.job.company=r.company;D.job.position=r.role;D.email.type='followup';D.email.date=longDate(r.applied);saveDocs();showTab('email');
   }
 });
-$('#tAdd').onclick=()=>{T.unshift({id:uid(),company:'',role:'',applied:todayISO(),status:'Applied',follow:addDays(todayISO(),7),notes:''});saveT();renderTracker();};
+$('#tAdd').onclick=()=>{resetFilters();T.unshift({id:uid(),company:'',role:'',applied:todayISO(),status:'Applied',follow:addDays(todayISO(),7),notes:''});saveT();renderTracker();};
 $('#tFromJob').onclick=()=>{
   if(!D.job.company.trim()&&!D.job.position.trim()){toast('Fill in the Job target on the Cover letter or Email tab first.');return;}
-  T.unshift({id:uid(),company:D.job.company,role:D.job.position,applied:todayISO(),status:'Applied',follow:addDays(todayISO(),7),notes:''});saveT();renderTracker();toast('Added');
+  resetFilters();T.unshift({id:uid(),company:D.job.company,role:D.job.position,applied:todayISO(),status:'Applied',follow:addDays(todayISO(),7),notes:'',source:D.job.source||'',posting:D.job.desc||''});saveT();renderTracker();toast('Added');
 };
 $('#tSort').onclick=()=>{T.sort((a,b)=>(a.follow||'9999').localeCompare(b.follow||'9999'));saveT();renderTracker();};
-$('#tSample').onclick=()=>{T=tSample();saveT();renderTracker();toast('Sample loaded');};
+$('#tSample').onclick=async()=>{
+  if(T.length&&!await askConfirm('Replace your applications with the sample?',T.length+' tracked application'+(T.length>1?'s':'')+' will be removed and replaced with fictional ones.','Replace'))return;
+  resetFilters();T=tSample();saveT();renderTracker();toast('Sample loaded');
+};
 let tClearArm=0;
 $('#tClear').onclick=async()=>{if(!T.length)return;if(await askConfirm('Delete all applications?',T.length+' tracked application'+(T.length>1?'s':'')+' will be removed. This cannot be undone.','Delete all')){T=[];saveT();renderTracker();}};
 $('#tCsv').onclick=()=>{
-  const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
-  const rows=[['Company','Role','Applied','Status','Follow up','Notes']].concat(T.map(r=>[r.company,r.role,r.applied,r.status,r.follow,r.notes]));
+  /* A leading =, +, - or @ gets an apostrophe so spreadsheets show it as text instead of running it as a formula. */
+  const q=v=>'"'+String(v==null?'':v).replace(/^(?=[=+\-@\t\r])/,"'").replace(/"/g,'""')+'"';
+  const cols=[['Company','company'],['Role','role'],['Applied','applied'],['Status','status'],['Follow up','follow'],['Notes','notes'],['Interview','interview'],['Job link','jobUrl'],['Source','source'],['Salary','salary'],['Location','location'],['Work setup','setup'],['Contact','contact'],['Contact info','contactInfo'],['Job posting','posting']];
+  const rows=[cols.map(c=>c[0])].concat(T.map(r=>cols.map(c=>r[c[1]])));
   saveFile('job_applications.csv',rows.map(r=>r.map(q).join(',')).join('\r\n')+'\r\n');
 };
 

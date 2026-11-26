@@ -96,7 +96,7 @@
 </main>
 <main id="paneTracker" class="wide" hidden>
   <div style="display:flex;flex-direction:column;gap:12px">
-    <div class="bar"><button id="tAdd" class="pri">+ Add application</button><span class="sp"></span>
+    <div class="bar"><button id="tAdd" class="pri">+ Add application</button><input type="search" id="tSearch" placeholder="Search applications" aria-label="Search applications" autocomplete="off"><span class="sp"></span>
       <div class="menu"><button data-menu aria-haspopup="true" aria-expanded="false" aria-label="More actions">More &#9662;</button><div class="pop" role="menu" hidden><button id="tFromJob" role="menuitem">Add current job target</button><button id="tSort" role="menuitem">Sort by follow-up date</button><button id="tCsv" role="menuitem">Download .csv</button><hr><button id="tSample" role="menuitem">Load sample</button><button id="tClear" role="menuitem">Clear all</button></div></div>
     </div>
     <div class="card"><h2>Overview</h2><div id="tSummary"></div></div>
