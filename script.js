@@ -326,13 +326,13 @@ async function buildDocx(M,bodyXml){
 let DL=null;
 (async()=>{try{DL=(window.claude&&window.claude.use)?await window.claude.use('downloads'):null;}catch(e){DL=null;}})();
 let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2800);}
-const MIME={pdf:'application/pdf',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',txt:'text/plain;charset=utf-8',csv:'text/csv;charset=utf-8',ics:'text/calendar;charset=utf-8'};
-function askConfirm(title,msg,okLabel){
+const MIME={pdf:'application/pdf',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',txt:'text/plain;charset=utf-8',csv:'text/csv;charset=utf-8',ics:'text/calendar;charset=utf-8',json:'application/json'};
+function askConfirm(title,msg,okLabel,safe){
   return new Promise(res=>{
     const prev=document.activeElement;
     const o=document.createElement('div');o.className='overlay';o.setAttribute('role','alertdialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-labelledby','cfT');
     o.innerHTML='<div class="dlg"><h2 id="cfT"></h2><p class="cfm"></p><div class="toolbar" style="justify-content:flex-end"><button id="cfNo">Cancel</button><button id="cfYes" class="danger"></button></div></div>';
-    o.querySelector('#cfT').textContent=title;o.querySelector('.cfm').textContent=msg;o.querySelector('#cfYes').textContent=okLabel||'Delete';
+    o.querySelector('#cfT').textContent=title;o.querySelector('.cfm').textContent=msg;o.querySelector('#cfYes').textContent=okLabel||'Delete';if(safe)o.querySelector('#cfYes').className='pri';
     const done=v=>{document.removeEventListener('keydown',key,true);o.remove();if(prev&&prev.focus)prev.focus();res(v);};
     const key=e=>{if(e.key==='Escape'){e.stopPropagation();done(false);}};
     document.addEventListener('keydown',key,true);
@@ -977,7 +977,14 @@ const SETUPS=['','On-site','Hybrid','Remote'];
 /* Only web addresses become clickable. "example.com/job" is treated as https. */
 const jobHref=v=>{v=String(v||'').trim();if(/^https?:\/\/\S+$/i.test(v))return v;return /^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(v)?'https://'+v:'';};
 const linkHtml=r=>{const h=jobHref(r.jobUrl);return h?`<a class="btn" href="${esc(h)}" target="_blank" rel="noopener noreferrer">Open job link</a>`:'';};
-const hasDetails=r=>['jobUrl','source','salary','benefits','location','setup','contact','contactInfo','posting'].some(k=>String(r[k]||'').trim());
+const hasDetails=r=>['jobUrl','source','salary','benefits','resumeId','resumeName','location','setup','contact','contactInfo','posting'].some(k=>String(r[k]||'').trim());
+/* The name is stored too, so it still shows if that version is later deleted. */
+const resumeName=r=>{const v=V.list.find(x=>x.id===r.resumeId);return v?v.name:r.resumeName||'';};
+function resumeOptions(r){
+  const gone=resumeName(r)&&!V.list.some(v=>v.id===r.resumeId);
+  const opt=(val,label,on)=>`<option value="${esc(val)}"${on?' selected':''}>${esc(label)}</option>`;
+  return opt('','Not recorded',!r.resumeId&&!gone)+(gone?opt(r.resumeId||'gone',r.resumeName+' (not in your versions)',true):'')+V.list.map(v=>opt(v.id,v.name,v.id===r.resumeId)).join('');
+}
 function detailsHtml(r){
   const inp=(label,key,full)=>`<label class="f ${full?'full':''}"><span>${label}</span><input data-t="${key}" value="${esc(r[key])}" autocomplete="off"></label>`;
   return `<tr class="t-det" id="det-${r.id}" data-id="${r.id}"><td colspan="7"><div class="grid">
@@ -985,7 +992,8 @@ function detailsHtml(r){
     ${inp('Where you found the job','source')}${inp('Salary or range','salary')}${inp('Location','location')}
     <label class="f"><span>Work setup</span><select data-t="setup">${SETUPS.map(x=>`<option value="${x}"${x===(r.setup||'')?' selected':''}>${x||'Not set'}</option>`).join('')}</select></label>
     ${inp('Contact person','contact')}${inp('Contact email or phone','contactInfo')}
-    ${inp('Benefits','benefits',1)}
+    <label class="f wide2"><span>Benefits</span><input data-t="benefits" value="${esc(r.benefits)}" autocomplete="off"></label>
+    <label class="f"><span>Resume version sent</span><select data-t="resumeId">${resumeOptions(r)}</select></label>
     ${STAGES.indexOf(r.status)<0?`<label class="f full"><span>Furthest stage reached (used in stats; correct it if needed)</span><select data-t="reached">${STAGES.map((x,i)=>`<option value="${i}"${i===furthest(r)?' selected':''}>${i?x:'Not sent'}</option>`).join('')}</select></label>`:''}
     <label class="f full"><span>Job posting (paste it here, since postings get taken down)</span><textarea data-t="posting" rows="6">${esc(r.posting)}</textarea></label></div></td></tr>`;
 }
@@ -993,7 +1001,7 @@ const detailsLabel=r=>(tOpen.has(r.id)?'Hide details':'Details')+(!tOpen.has(r.i
 /* Search and status filter. Not saved: the full list shows again after a reload. */
 let tFilter='all',tQuery='';
 const matches=r=>(tFilter==='all'||(tFilter==='due'?isDue(r):r.status===tFilter))&&
-  (!tQuery||[r.company,r.role,r.notes,r.source,r.location,r.contact].join(' ').toLowerCase().indexOf(tQuery)>=0);
+  (!tQuery||[r.company,r.role,r.notes,r.source,r.location,r.contact,resumeName(r)].join(' ').toLowerCase().indexOf(tQuery)>=0);
 function resetFilters(){tFilter='all';tQuery='';$('#tSearch').value='';}
 /* Interviews from today onward for applications that are still open, soonest first. */
 const upcoming=()=>T.filter(r=>r.interview&&r.interview.slice(0,10)>=todayISO()&&['Rejected','Withdrawn'].indexOf(r.status)<0).sort((a,b)=>a.interview.localeCompare(b.interview));
@@ -1033,14 +1041,20 @@ function renderStats(){
   const row=x=>`<tr><th scope="row">${esc(x.name)}</th><td>${x.sent}</td>${cell(x.moved,x.sent)}${cell(x.interview,x.sent)}${cell(x.offer,x.sent)}</tr>`;
   $('#tStats').innerHTML=s.all.sent?`<div class="stats-wrap"><table class="stats"><thead><tr><th scope="col">Source</th><th scope="col">Sent</th><th scope="col">Moved forward</th><th scope="col">Interview</th><th scope="col">Offer</th></tr></thead><tbody>${s.sources.map(row).join('')}</tbody><tfoot>${row(s.all)}</tfoot></table></div><p class="hint" style="margin:8px 0 0">Counts every application you sent, whatever the filter. "Moved forward" means it reached Assessment or later. Add "Where you found the job" under Details to compare sources. With only a few applications, treat percentages as a rough guide.</p>`:'<p class="hint" style="margin:0">Stats appear once you have sent an application.</p>';
 }
+/* Offers side by side: one column for each application whose status is Offer. */
+function renderOffers(){
+  const list=T.filter(r=>r.status==='Offer');
+  const lines=[['Role',r=>r.role],['Salary',r=>r.salary],['Benefits',r=>r.benefits],['Location',r=>r.location],['Work setup',r=>r.setup],['Resume sent',resumeName],['Notes',r=>r.notes]];
+  $('#tOffers').innerHTML=list.length?`<div class="offers-wrap"><table class="offers" style="--offer-min:${list.length*160}px"><thead><tr><td></td>${list.map(r=>`<th scope="col">${esc(r.company||'[company]')}</th>`).join('')}</tr></thead><tbody>${lines.map(l=>`<tr><th scope="row">${l[0]}</th>${list.map(r=>{const v=String(l[1](r)||'').trim();return v?`<td>${esc(v)}</td>`:'<td class="none">Not recorded</td>';}).join('')}</tr>`).join('')}</tbody></table></div><p class="hint">${list.length<2?'Mark another application as Offer to compare them. ':''}Fill in salary, benefits, location and work setup under Details.</p>`:'<p class="hint">Offers appear here when you set an application\'s status to Offer.</p>';
+}
 function renderSummary(){
-  keepStages();renderStats();
+  keepStages();renderStats();renderOffers();
   const counts={};STAT.forEach(x=>{counts[x]=0;});T.forEach(r=>{counts[r.status]=(counts[r.status]||0)+1;});
   const due=T.filter(isDue).length;
   const chip=(key,label,cls)=>`<button type="button" class="badge ${cls||''}${label.endsWith(': 0')?' zero':''}" data-tf="${key}" aria-pressed="${tFilter===key}">${label}</button>`;
   const next=upcoming();
   const soon=next.length?`<div class="upcoming"><b>Upcoming interviews</b><ul>${next.map(r=>`<li><b>${esc(whenText(r.interview))}</b> &ndash; ${esc(r.company||'[company]')}${r.role?' ('+esc(r.role)+')':''}</li>`).join('')}</ul></div>`:'';
-  $('#tSummary').innerHTML=soon+`<div class="chips" role="group" aria-label="Filter by status">${chip('all','All: '+T.length)}${STAT.map(x=>chip(x,x+': '+counts[x])).join('')}${chip('due','Follow-ups due: '+due,due?'due':'')}</div><p class="hint">Click a count to filter the list. Follow-up dates default to one week after you apply. Rows turn orange when a follow-up is due. This list is saved in this browser only, so download the .csv now and then as a backup.</p>`;
+  $('#tSummary').innerHTML=soon+`<div class="chips" role="group" aria-label="Filter by status">${chip('all','All: '+T.length)}${STAT.map(x=>chip(x,x+': '+counts[x])).join('')}${chip('due','Follow-ups due: '+due,due?'due':'')}</div><p class="hint">Click a count to filter the list. Follow-up dates default to one week after you apply. Rows turn orange when a follow-up is due. This list is saved in this browser only, so download a backup from the Guide now and then.</p>`;
 }
 function renderTracker(){
   renderSummary();
@@ -1048,7 +1062,7 @@ function renderTracker(){
   $('#tTable').innerHTML=list.length?`<table class="tt"><thead><tr><th>Company</th><th>Role</th><th>Applied</th><th>Status</th><th>Follow up</th><th>Notes</th><th></th></tr></thead><tbody>${list.map(r=>`<tr class="${isDue(r)?'due':''}" data-id="${r.id}">
     <td class="c-wide" data-label="Company"><input aria-label="Company" data-t="company" value="${esc(r.company)}"></td><td class="c-wide" data-label="Role"><input aria-label="Role" data-t="role" value="${esc(r.role)}"></td>
     <td class="c-applied" data-label="Applied"><input type="date" aria-label="Applied" data-t="applied" value="${esc(r.applied)}"></td>
-    <td class="c-wide c-status" data-label="Status"><select aria-label="Status" data-t="status">${STAT.map(x=>`<option${x===r.status?' selected':''}>${x}</option>`).join('')}</select>${showsInterview(r)?`<input type="datetime-local" data-t="interview" value="${esc(r.interview)}" aria-label="Interview date and time" title="Interview date and time">`:''}</td>
+    <td class="c-wide c-status" data-label="Status"><select aria-label="Status" data-t="status" data-status="${esc(r.status)}">${STAT.map(x=>`<option${x===r.status?' selected':''}>${x}</option>`).join('')}</select>${showsInterview(r)?`<input type="datetime-local" data-t="interview" value="${esc(r.interview)}" aria-label="Interview date and time" title="Interview date and time">`:''}</td>
     <td class="c-follow" data-label="Follow up"><input type="date" aria-label="Follow up" data-t="follow" value="${esc(r.follow)}"></td><td class="c-wide" data-label="Notes"><input aria-label="Notes" data-t="notes" value="${esc(r.notes)}"></td>
     <td class="c-wide c-actions"><div class="t-actions"><span class="t-due">${dueHtml(r)}</span><span class="t-btns"><button data-ta="details" aria-expanded="${tOpen.has(r.id)}"${tOpen.has(r.id)?` aria-controls="det-${r.id}"`:''}>${detailsLabel(r)}</button> <button data-ta="mail">Follow-up email</button> <button data-ta="del" title="Delete" aria-label="Delete">&times;</button></span></div></td></tr>${tOpen.has(r.id)?detailsHtml(r):''}`).join('')}</tbody></table>`:T.length?'<p class="hint">No applications match this search or filter.</p>':'<p class="hint">No applications yet.</p><div class="toolbar"><button class="pri" data-te="add">+ Add application</button><button data-te="sample">Load sample</button></div>';
 }
@@ -1061,7 +1075,8 @@ $('#tTable').addEventListener('input',e=>{const f=e.target.dataset&&e.target.dat
 $('#tTable').addEventListener('change',e=>{
   const f=e.target.dataset&&e.target.dataset.t;const r=f&&rowOf(e.target);if(!r)return;
   r[f]=e.target.value;if(f==='applied'&&e.target.value&&!r.follow)r.follow=addDays(e.target.value,7);
-  saveT();
+  if(f==='resumeId'){const v=V.list.find(x=>x.id===r.resumeId);if(v)r.resumeName=v.name;else if(!r.resumeId)r.resumeName='';}
+  saveT();renderOffers();
   /* Date fields fire "change" while a date is still being typed, so only update around them to keep the cursor in place. */
   if(f==='status'){settleStage(r);renderTracker();const n=$('#tTable tr[data-id="'+r.id+'"] [data-t="status"]');if(n)n.focus();}
   else if(f==='applied'||f==='follow'||f==='interview'||f==='reached'){renderSummary();paintRow(r);}
@@ -1091,7 +1106,7 @@ $('#tTable').addEventListener('click',e=>{
 $('#tAdd').onclick=()=>{resetFilters();T.unshift({id:uid(),company:'',role:'',applied:todayISO(),status:'Applied',follow:addDays(todayISO(),7),notes:''});saveT();renderTracker();};
 $('#tFromJob').onclick=()=>{
   if(!D.job.company.trim()&&!D.job.position.trim()){toast('Fill in the Job target on the Cover letter or Email tab first.');return;}
-  resetFilters();T.unshift({id:uid(),company:D.job.company,role:D.job.position,applied:todayISO(),status:'Applied',follow:addDays(todayISO(),7),notes:'',source:D.job.source||'',posting:D.job.desc||''});saveT();renderTracker();toast('Added');
+  resetFilters();T.unshift({id:uid(),company:D.job.company,role:D.job.position,applied:todayISO(),status:'Applied',follow:addDays(todayISO(),7),notes:'',source:D.job.source||'',posting:D.job.desc||'',resumeId:activeV().id,resumeName:activeV().name});saveT();renderTracker();toast('Added');
 };
 $('#tSort').onclick=()=>{T.sort((a,b)=>(a.follow||'9999').localeCompare(b.follow||'9999'));saveT();renderTracker();};
 $('#tSample').onclick=async()=>{
@@ -1140,10 +1155,80 @@ $('#tIcs').onclick=()=>{
 $('#tCsv').onclick=()=>{
   /* A leading =, +, - or @ gets an apostrophe so spreadsheets show it as text instead of running it as a formula. */
   const q=v=>'"'+String(v==null?'':v).replace(/^(?=[=+\-@\t\r])/,"'").replace(/"/g,'""')+'"';
-  const cols=[['Company','company'],['Role','role'],['Applied','applied'],['Status','status'],['Follow up','follow'],['Notes','notes'],['Interview','interview'],['Job link','jobUrl'],['Source','source'],['Salary','salary'],['Benefits','benefits'],['Location','location'],['Work setup','setup'],['Contact','contact'],['Contact info','contactInfo'],['Job posting','posting'],['Furthest stage','stage']];
-  const rows=[cols.map(c=>c[0])].concat(T.map(r=>cols.map(c=>c[1]==='stage'?STAGES[furthest(r)]:r[c[1]])));
+  const cols=[['Company','company'],['Role','role'],['Applied','applied'],['Status','status'],['Follow up','follow'],['Notes','notes'],['Interview','interview'],['Job link','jobUrl'],['Source','source'],['Salary','salary'],['Benefits','benefits'],['Location','location'],['Work setup','setup'],['Contact','contact'],['Contact info','contactInfo'],['Job posting','posting'],['Furthest stage','stage'],['Resume version','resume']];
+  const rows=[cols.map(c=>c[0])].concat(T.map(r=>cols.map(c=>c[1]==='stage'?STAGES[furthest(r)]:c[1]==='resume'?resumeName(r):r[c[1]])));
   saveFile('job_applications.csv',rows.map(r=>r.map(q).join(',')).join('\r\n')+'\r\n');
 };
+
+/* CSV import: adds applications from a downloaded list or a spreadsheet. Existing ones are never changed. */
+function parseCsv(text){
+  const s=String(text).replace(/^﻿/,'');
+  const head=s.split(/\r?\n/)[0],count=c=>head.split(c).length;
+  const sep=[',',';','\t'].sort((a,b)=>count(b)-count(a))[0];
+  const rows=[];let row=[],cell='',quoted=false;
+  for(let i=0;i<s.length;i++){
+    const c=s[i];
+    if(quoted){if(c!=='"')cell+=c;else if(s[i+1]==='"'){cell+='"';i++;}else quoted=false;}
+    else if(c==='"'&&!cell)quoted=true;
+    else if(c===sep){row.push(cell);cell='';}
+    else if(c==='\n'||c==='\r'){if(c==='\r'&&s[i+1]==='\n')i++;row.push(cell);rows.push(row);row=[];cell='';}
+    else cell+=c;
+  }
+  if(cell||row.length){row.push(cell);rows.push(row);}
+  return rows.filter(r=>r.some(x=>x.trim()));
+}
+const CSV_NAMES={company:['company','employer','companyname'],role:['role','position','jobtitle','title'],applied:['applied','dateapplied','applicationdate'],status:['status'],follow:['followup','followupdate'],notes:['notes','note','remarks'],interview:['interview','interviewdate'],jobUrl:['joblink','link','url'],source:['source','wherefound'],salary:['salary','salaryorrange'],benefits:['benefits'],location:['location'],setup:['worksetup','setup'],contact:['contact','contactperson'],contactInfo:['contactinfo','contactemailorphone'],posting:['jobposting','jobdescription'],stage:['furtheststage'],resume:['resumeversion']};
+/* Accepts 2026-11-27 or 11/27/2026 (month first). Returns '' for anything else, including impossible dates. */
+function csvDate(v){
+  let m=/^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(v),y,mo,d;
+  if(m){y=+m[1];mo=+m[2];d=+m[3];}
+  else{m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(v);if(!m)return'';mo=+m[1];d=+m[2];y=+m[3];}
+  const x=new Date(y,mo-1,d);
+  return x.getFullYear()===y&&x.getMonth()===mo-1&&x.getDate()===d?isoLocal(x):'';
+}
+function csvDateTime(v){
+  const m=/^(\S+?)(?:T|\s+)(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?$/.exec(v);if(!m)return'';
+  const day=csvDate(m[1]);let h=+m[2];
+  if(m[4]){if(h<1||h>12)return'';h=h%12+(/p/i.test(m[4])?12:0);}
+  return day&&h<24&&+m[3]<60?day+'T'+String(h).padStart(2,'0')+':'+m[3]:'';
+}
+function csvApplications(text){
+  const rows=parseCsv(text);if(rows.length<2)return null;
+  const key=h=>h.toLowerCase().replace(/[^a-z]/g,'');
+  const at={};rows[0].forEach((h,i)=>{const f=Object.keys(CSV_NAMES).find(k=>CSV_NAMES[k].indexOf(key(h))>=0);if(f&&!(f in at))at[f]=i;});
+  if(!('company' in at)&&!('role' in at))return null;
+  const find=(list,v)=>list.find(x=>x&&x.toLowerCase()===v.toLowerCase());
+  return rows.slice(1).map(cells=>{
+    /* Removes the apostrophe the download adds in front of formula-like text. */
+    const get=f=>f in at?String(cells[at[f]]||'').trim().replace(/^'(?=[=+\-@\t\r])/,''):'';
+    const r={id:uid()},odd=[];
+    ['company','role','notes','jobUrl','source','salary','benefits','location','contact','contactInfo','posting'].forEach(f=>{r[f]=get(f);});
+    const read=(f,label,convert)=>{const v=get(f),out=v?convert(v):'';if(v&&!out)odd.push(label+' in file: '+v);return out||'';};
+    r.applied=read('applied','Applied date',csvDate);r.follow=read('follow','Follow-up date',csvDate);r.interview=read('interview','Interview',csvDateTime);
+    r.setup=read('setup','Work setup',v=>find(SETUPS,v));
+    r.status=read('status','Status',v=>find(STAT,v))||(r.applied||get('status')?'Applied':'Wishlist');
+    const stage=find(STAGES,get('stage'));if(stage&&STAGES.indexOf(r.status)<0)r.reached=STAGES.indexOf(stage);
+    const name=get('resume');if(name){const v=V.list.find(x=>x.name===name);r.resumeName=name;if(v)r.resumeId=v.id;}
+    if(odd.length)r.notes=[r.notes].concat(odd).filter(Boolean).join(' | ');
+    return r;
+  }).filter(r=>r.company||r.role);
+}
+const sameKey=r=>[r.company,r.role,r.applied].map(x=>String(x||'').trim().toLowerCase()).join('|');
+async function importCsv(file){
+  if(file.size>5e6){toast('That file is too large (over 5 MB).');return;}
+  let list=null;try{list=csvApplications(await file.text());}catch(e){}
+  if(!list||!list.length){toast('No applications found. The first row needs a Company or Role column.');return;}
+  const seen=new Set(T.map(sameKey)),add=list.filter(r=>{const k=sameKey(r);if(seen.has(k))return false;seen.add(k);return true;});
+  const skipped=list.length-add.length;
+  if(!add.length){toast('Nothing to import: every application in the file is already listed.');return;}
+  const ok=await askConfirm('Import '+add.length+' application'+(add.length>1?'s':'')+'?','They are added to your list; nothing is replaced.'+(skipped?' '+skipped+' duplicate'+(skipped>1?'s':'')+' (same company, role and applied date) will be skipped.':''),'Import',true);
+  if(!ok)return;
+  const next=add.concat(T);
+  try{localStorage.setItem(TK,JSON.stringify(next));}catch(e){toast('Could not save. Browser storage may be full or blocked.');return;}
+  T=next;resetFilters();renderTracker();toast('Imported '+add.length);
+}
+$('#tImport').onclick=()=>$('#fCsv').click();
+$('#fCsv').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(f)importCsv(f);});
 
 /* ===== Interview prep ===== */
 const IK='resume-gen-interview-v1';
@@ -1347,5 +1432,50 @@ $('#pSide').addEventListener('click',e=>{
   if(e.target.id==='pTxt')saveFile(base().replace(/_Resume$/,'')+'_PDS_Worksheet.txt',pdsText());
 });
 
+/* ===== Backup and restore ===== */
+const BACKUP_ID='job-application-toolkit';
+const backupData=()=>({app:BACKUP_ID,format:1,created:new Date().toISOString(),data:{versions:V,docs:D,tracker:T,interview:I}});
+const isObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
+const safeId=x=>typeof x==='string'&&/^[\w-]{1,40}$/.test(x);
+/* Checks a backup file and returns a clean copy of its data, or null if it is not usable. */
+function readBackup(text){
+  let b;try{b=JSON.parse(text);}catch(e){return null;}
+  if(!isObj(b)||b.app!==BACKUP_ID||b.format!==1||!isObj(b.data))return null;
+  const d=b.data,v=d.versions;
+  if(!isObj(v)||!Array.isArray(v.list)||!v.list.length||!v.list.every(x=>isObj(x)&&isObj(x.data)))return null;
+  if(!Array.isArray(d.tracker)||!d.tracker.every(isObj))return null;
+  if(d.docs!=null&&!isObj(d.docs))return null;
+  if(d.interview!=null&&!isObj(d.interview))return null;
+  /* Ids end up inside the page's markup, so anything unusual is replaced. */
+  const renamed={};
+  v.list.forEach(x=>{if(!safeId(x.id)){const id=uid();renamed[x.id]=id;x.id=id;}x.name=String(x.name||'Untitled');});
+  if(renamed[v.active])v.active=renamed[v.active];
+  const used=new Set();
+  d.tracker.forEach(r=>{if(!safeId(r.id)||used.has(r.id))r.id=uid();used.add(r.id);if(r.resumeId){if(renamed[r.resumeId])r.resumeId=renamed[r.resumeId];else if(!safeId(r.resumeId))delete r.resumeId;}});
+  return{created:String(b.created||''),data:d};
+}
+/* All or nothing: if one part cannot be saved, the previous data is put back. */
+function writeBackup(d){
+  const parts=[[VK,d.versions],[TK,d.tracker],[DK,d.docs],[IK,d.interview]].filter(p=>p[1]!=null);
+  const old=parts.map(p=>[p[0],localStorage.getItem(p[0])]);
+  try{parts.forEach(p=>localStorage.setItem(p[0],JSON.stringify(p[1])));return true;}
+  catch(e){try{old.forEach(p=>{if(p[1]==null)localStorage.removeItem(p[0]);else localStorage.setItem(p[0],p[1]);});}catch(x){}return false;}
+}
+async function restoreBackup(file){
+  if(file.size>2e7){toast('That file is too large to be a backup.');return;}
+  let b=null;try{b=readBackup(await file.text());}catch(e){}
+  if(!b){toast('That is not a Job Application Toolkit backup file.');return;}
+  const n=(c,w)=>c+' '+w+(c===1?'':'s'),when=new Date(b.created);
+  const ok=await askConfirm('Replace your data with this backup?','Backup'+(isNaN(when)?'':' from '+when.toLocaleString())+' with '+n(b.data.versions.list.length,'resume version')+' and '+n(b.data.tracker.length,'application')+'. What is in this browser now will be replaced and cannot be recovered unless you have downloaded its backup.','Replace my data');
+  if(!ok)return;
+  if(!writeBackup(b.data)){toast('Could not save. Browser storage may be full or blocked.');return;}
+  try{sessionStorage.setItem('tk-restored','1');}catch(e){}
+  location.reload();
+}
+$('#gBackup').onclick=()=>saveFile('job_toolkit_backup_'+todayISO()+'.json',JSON.stringify(backupData(),null,2));
+$('#gRestore').onclick=()=>$('#fRestore').click();
+$('#fRestore').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(f)restoreBackup(f);});
+
 renderForm();refresh();initTabs();
+try{if(sessionStorage.getItem('tk-restored')){sessionStorage.removeItem('tk-restored');toast('Backup restored');}}catch(e){}
 })();

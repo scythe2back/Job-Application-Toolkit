@@ -148,21 +148,23 @@ a.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font
 @media(max-width:560px){.grid{grid-template-columns:1fr}input,textarea,select{font-size:16px}}
 /* Tracker status filters. --neon is the bright color; --ink-on is the darker text that stays readable on white. */
 .chips button.badge{--neon:#f5f5f5;--ink-on:#333333;--chip-text:var(--ink-on);--chip-line:var(--neon);min-height:28px;padding:0 10px;font-family:inherit;color:var(--chip-text);border:1px solid var(--chip-line);background:color-mix(in srgb,var(--neon) 14%,transparent)}
+.tt select[data-status]{--neon:#a8b8c8;--ink-on:#40525f;--chip-text:var(--ink-on);color:var(--chip-text);border-color:var(--neon);background-color:color-mix(in srgb,var(--neon) 9%,var(--card));font-weight:600}
+.tt select[data-status] option{color:var(--ink);background:var(--card);font-weight:400}
 .chips [data-tf="all"]{--chip-line:#9a9a9a}
-.chips button.badge[data-tf="Wishlist"]{--neon:#b388ff;--ink-on:#5b2db8}
-.chips button.badge[data-tf="Applied"]{--neon:#3da9ff;--ink-on:#0a529b}
-.chips button.badge[data-tf="Assessment"]{--neon:#00e5ff;--ink-on:#00606e}
-.chips button.badge[data-tf="Interview"]{--neon:#fff03d;--ink-on:#665700}
-.chips button.badge[data-tf="Final interview"]{--neon:#ff4fd8;--ink-on:#9c1079}
-.chips button.badge[data-tf="Offer"]{--neon:#39ff14;--ink-on:#12610a}
-.chips button.badge[data-tf="Rejected"]{--neon:#ff4d6a;--ink-on:#a80026}
-.chips button.badge[data-tf="Withdrawn"]{--neon:#a8b8c8;--ink-on:#40525f}
+.tt select[data-status="Wishlist"],.chips button.badge[data-tf="Wishlist"]{--neon:#b388ff;--ink-on:#5b2db8}
+.tt select[data-status="Applied"],.chips button.badge[data-tf="Applied"]{--neon:#3da9ff;--ink-on:#0a529b}
+.tt select[data-status="Assessment"],.chips button.badge[data-tf="Assessment"]{--neon:#00e5ff;--ink-on:#00606e}
+.tt select[data-status="Interview"],.chips button.badge[data-tf="Interview"]{--neon:#fff03d;--ink-on:#665700}
+.tt select[data-status="Final interview"],.chips button.badge[data-tf="Final interview"]{--neon:#ff4fd8;--ink-on:#9c1079}
+.tt select[data-status="Offer"],.chips button.badge[data-tf="Offer"]{--neon:#39ff14;--ink-on:#12610a}
+.tt select[data-status="Rejected"],.chips button.badge[data-tf="Rejected"]{--neon:#ff4d6a;--ink-on:#a80026}
+.tt select[data-status="Withdrawn"],.chips button.badge[data-tf="Withdrawn"]{--neon:#a8b8c8;--ink-on:#40525f}
 .chips button.badge[data-tf="due"]{--neon:#ff9100;--ink-on:#824100}
 .chips button.badge.zero{border-color:color-mix(in srgb,var(--chip-line) 45%,transparent);background:color-mix(in srgb,var(--neon) 7%,transparent)}
 .chips button.badge:hover{border-color:var(--chip-line);background:color-mix(in srgb,var(--neon) 28%,transparent)}
 .chips button.badge[aria-pressed="true"]{background:var(--neon);color:#111;border-color:var(--chip-text);box-shadow:0 0 0 1px var(--chip-text),0 0 8px var(--neon)}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .chips button.badge{--chip-text:var(--neon);--chip-line:var(--neon)}}
-:root[data-theme="dark"] .chips button.badge{--chip-text:var(--neon);--chip-line:var(--neon)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .chips button.badge,:root:not([data-theme="light"]) .tt select[data-status]{--chip-text:var(--neon);--chip-line:var(--neon)}}
+:root[data-theme="dark"] .chips button.badge,:root[data-theme="dark"] .tt select[data-status]{--chip-text:var(--neon);--chip-line:var(--neon)}
 /* ===== Tracker layout. Spacing: 8px inside groups, 12px between groups, 16px card padding. ===== */
 #paneTracker .card{padding:16px}
 #paneTracker .bar button,#tSearch{height:36px;min-height:36px}
@@ -263,3 +265,20 @@ a.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font
 @media(max-width:359px){
   .tt td.c-applied,.tt td.c-follow{grid-column:1/-1}
 }
+/* Compare offers, details panel additions and guide cards */
+#tOffersCard>summary{cursor:pointer;font-size:13px;font-weight:600}
+#tOffersCard[open]>summary{margin-bottom:12px}
+#tOffers>.hint{margin:0}
+#tOffers>.offers-wrap+.hint{margin-top:12px}
+.offers-wrap{overflow-x:auto}
+.offers{width:100%;table-layout:fixed;min-width:calc(112px + var(--offer-min,160px));border-collapse:collapse;font-size:13px}
+.offers th,.offers td{line-height:20px;padding:8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;overflow-wrap:anywhere;white-space:pre-wrap}
+.offers tr>:first-child{width:112px;padding-left:0;font-size:11px;color:var(--mute)}
+.offers td.none{color:var(--mute)}
+.t-det .grid>.wide2{grid-column:span 2}
+@media(max-width:1040px){.t-det .grid>.wide2{grid-column:1/-1}}
+.gcard h2{font-size:14px}
+.gcard p,.gcard ul{margin:0 0 12px;font-size:13px}
+.gcard ul{padding-left:18px;margin-bottom:0}
+.gcard li+li{margin-top:4px}
+.gcard .toolbar{margin:0}
