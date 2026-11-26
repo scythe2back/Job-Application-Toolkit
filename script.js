@@ -963,7 +963,7 @@ const addDays=(iso,n)=>{const d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+
 const longDate=iso=>iso?new Date(iso+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}):'';
 const STAT=['Wishlist','Applied','Assessment','Interview','Final interview','Offer','Rejected','Withdrawn'];
 function tSample(){const t=todayISO();return[
-  {id:uid(),company:'Sample Cyber Defense Corp.',role:'Junior Security Analyst',applied:addDays(t,-9),status:'Applied',follow:addDays(t,-2),notes:'Applied through the careers page',source:'Company careers page',location:'Makati City',setup:'Hybrid'},
+  {id:uid(),company:'Sample Cyber Defense Corp.',role:'Junior Security Analyst',applied:addDays(t,-9),status:'Applied',follow:addDays(t,-2),notes:'Applied through the careers page',source:'Company careers page',location:'Makati City',setup:'Hybrid',benefits:'HMO, 13th month pay'},
   {id:uid(),company:'Sample Bank Inc.',role:'SOC Analyst (L1)',applied:addDays(t,-4),status:'Interview',follow:addDays(t,3),interview:addDays(t,2)+'T10:00',source:'JobStreet',notes:'Technical interview scheduled'},
   {id:uid(),company:'Sample IT Services',role:'IT Security Technician',applied:addDays(t,-1),status:'Applied',follow:addDays(t,6),notes:'',source:'LinkedIn'}];}
 let T=null;try{T=JSON.parse(localStorage.getItem(TK)||'null');}catch(e){}
@@ -977,7 +977,7 @@ const SETUPS=['','On-site','Hybrid','Remote'];
 /* Only web addresses become clickable. "example.com/job" is treated as https. */
 const jobHref=v=>{v=String(v||'').trim();if(/^https?:\/\/\S+$/i.test(v))return v;return /^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(v)?'https://'+v:'';};
 const linkHtml=r=>{const h=jobHref(r.jobUrl);return h?`<a class="btn" href="${esc(h)}" target="_blank" rel="noopener noreferrer">Open job link</a>`:'';};
-const hasDetails=r=>['jobUrl','source','salary','location','setup','contact','contactInfo','posting'].some(k=>String(r[k]||'').trim());
+const hasDetails=r=>['jobUrl','source','salary','benefits','location','setup','contact','contactInfo','posting'].some(k=>String(r[k]||'').trim());
 function detailsHtml(r){
   const inp=(label,key,full)=>`<label class="f ${full?'full':''}"><span>${label}</span><input data-t="${key}" value="${esc(r[key])}" autocomplete="off"></label>`;
   return `<tr class="t-det" id="det-${r.id}" data-id="${r.id}"><td colspan="7"><div class="grid">
@@ -985,6 +985,7 @@ function detailsHtml(r){
     ${inp('Where you found the job','source')}${inp('Salary or range','salary')}${inp('Location','location')}
     <label class="f"><span>Work setup</span><select data-t="setup">${SETUPS.map(x=>`<option value="${x}"${x===(r.setup||'')?' selected':''}>${x||'Not set'}</option>`).join('')}</select></label>
     ${inp('Contact person','contact')}${inp('Contact email or phone','contactInfo')}
+    ${inp('Benefits','benefits',1)}
     ${STAGES.indexOf(r.status)<0?`<label class="f full"><span>Furthest stage reached (used in stats; correct it if needed)</span><select data-t="reached">${STAGES.map((x,i)=>`<option value="${i}"${i===furthest(r)?' selected':''}>${i?x:'Not sent'}</option>`).join('')}</select></label>`:''}
     <label class="f full"><span>Job posting (paste it here, since postings get taken down)</span><textarea data-t="posting" rows="6">${esc(r.posting)}</textarea></label></div></td></tr>`;
 }
@@ -1139,7 +1140,7 @@ $('#tIcs').onclick=()=>{
 $('#tCsv').onclick=()=>{
   /* A leading =, +, - or @ gets an apostrophe so spreadsheets show it as text instead of running it as a formula. */
   const q=v=>'"'+String(v==null?'':v).replace(/^(?=[=+\-@\t\r])/,"'").replace(/"/g,'""')+'"';
-  const cols=[['Company','company'],['Role','role'],['Applied','applied'],['Status','status'],['Follow up','follow'],['Notes','notes'],['Interview','interview'],['Job link','jobUrl'],['Source','source'],['Salary','salary'],['Location','location'],['Work setup','setup'],['Contact','contact'],['Contact info','contactInfo'],['Job posting','posting'],['Furthest stage','stage']];
+  const cols=[['Company','company'],['Role','role'],['Applied','applied'],['Status','status'],['Follow up','follow'],['Notes','notes'],['Interview','interview'],['Job link','jobUrl'],['Source','source'],['Salary','salary'],['Benefits','benefits'],['Location','location'],['Work setup','setup'],['Contact','contact'],['Contact info','contactInfo'],['Job posting','posting'],['Furthest stage','stage']];
   const rows=[cols.map(c=>c[0])].concat(T.map(r=>cols.map(c=>c[1]==='stage'?STAGES[furthest(r)]:r[c[1]])));
   saveFile('job_applications.csv',rows.map(r=>r.map(q).join(',')).join('\r\n')+'\r\n');
 };
