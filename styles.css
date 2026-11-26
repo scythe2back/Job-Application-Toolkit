@@ -274,9 +274,7 @@ a.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font
 .t-det .grid>.wide2{grid-column:span 2}
 @media(max-width:1040px){.t-det .grid>.wide2{grid-column:1/-1}}
 .gcard h2{font-size:14px}
-.gcard p,.gcard ul{margin:0 0 12px;font-size:13px}
-.gcard ul{padding-left:18px;margin-bottom:0}
-.gcard li+li{margin-top:4px}
+.gcard p{margin:0 0 12px;font-size:13px}
 .gcard .toolbar{margin:0}
 .dlg.report{max-width:760px;max-height:100%;overflow:auto;padding:16px;gap:12px}
 .dlg-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
