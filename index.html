@@ -38,7 +38,7 @@
         <li><b>Details:</b> save the job link, posting, salary, benefits, contact and the resume version you sent. Only the version's name is saved, so duplicate a resume before changing it if you want to keep what you sent.</li>
         <li><b>Calendar:</b> More &rarr; Add to calendar puts follow-ups and interviews in your calendar app. Download it again after changing dates.</li>
         <li><b>Spreadsheets:</b> More &rarr; Download .csv or Import .csv. Importing adds applications and skips duplicates. Write dates as 2026-11-27 or 11/27/2026 (month first).</li>
-        <li><b>Stats and offers:</b> compare job sources, and see offers side by side.</li>
+        <li><b>Insights:</b> the Insights button shows stats by job source and compares your offers side by side.</li>
       </ul>
     </section>
     <section class="card gcard"><h2>Your data and backups</h2>
@@ -112,11 +112,10 @@
 <main id="paneTracker" class="wide" hidden>
   <div style="display:flex;flex-direction:column;gap:12px">
     <div class="bar"><button id="tAdd" class="pri">+ Add application</button><input type="search" id="tSearch" placeholder="Search applications" aria-label="Search applications" autocomplete="off"><span class="sp"></span>
+      <div class="menu" id="tInsights"><button data-menu id="tInsightsBtn" aria-haspopup="true" aria-expanded="false">Insights &#9662;</button><div class="pop" role="menu" hidden><button id="tStatsBtn" role="menuitem">Stats by job source</button><button id="tOffersBtn" role="menuitem">Compare offers</button></div></div>
       <div class="menu"><button data-menu aria-haspopup="true" aria-expanded="false" aria-label="More actions">More &#9662;</button><div class="pop" role="menu" hidden><button id="tFromJob" role="menuitem">Add current job target</button><button id="tSort" role="menuitem">Sort by follow-up date</button><button id="tIcs" role="menuitem">Add to calendar (.ics)</button><button id="tCsv" role="menuitem">Download .csv</button><button id="tImport" role="menuitem">Import .csv</button><hr><button id="tSample" role="menuitem">Load sample</button><button id="tClear" role="menuitem">Clear all</button></div></div>
     </div>
     <div class="card"><h2>Overview</h2><div id="tSummary"></div></div>
-    <details class="card" id="tStatsCard"><summary>Stats by job source</summary><div id="tStats"></div></details>
-    <details class="card" id="tOffersCard"><summary>Compare offers</summary><div id="tOffers"></div></details>
     <div class="card" id="tCard"><div id="tTable"></div></div>
   </div>
 </main>
@@ -128,6 +127,8 @@
   <div id="pForm"></div>
   <div class="side" id="pSide"></div>
 </main>
+<div class="overlay" id="tStatsDlg" role="dialog" aria-modal="true" aria-labelledby="tStatsDlgT" hidden><div class="dlg report"><div class="dlg-head"><h2 id="tStatsDlgT">Stats by job source</h2><button data-close>Close</button></div><div id="tStats"></div></div></div>
+<div class="overlay" id="tOffersDlg" role="dialog" aria-modal="true" aria-labelledby="tOffersDlgT" hidden><div class="dlg report"><div class="dlg-head"><h2 id="tOffersDlgT">Compare offers</h2><button data-close>Close</button></div><div id="tOffers"></div></div></div>
 <input type="file" id="fImport" accept=".docx,.pdf,.txt" hidden>
 <input type="file" id="fCsv" accept=".csv,text/csv" hidden>
 <input type="file" id="fRestore" accept=".json,application/json" hidden>

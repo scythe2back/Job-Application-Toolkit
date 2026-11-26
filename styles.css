@@ -172,8 +172,6 @@ a.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font
 .upcoming{margin-bottom:12px;font-size:13px}
 .upcoming ul{list-style:none;margin:4px 0 0;padding:0}
 #tSummary>.hint{margin:12px 0 0}
-#tStatsCard>summary{cursor:pointer;font-size:13px;font-weight:600}
-#tStatsCard[open]>summary{margin-bottom:12px}
 #tStats>.hint:not(:only-child){margin-top:12px!important}
 .stats-wrap{overflow-x:auto}
 .stats{width:100%;table-layout:fixed;border-collapse:collapse;font-size:13px}
@@ -266,8 +264,6 @@ a.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font
   .tt td.c-applied,.tt td.c-follow{grid-column:1/-1}
 }
 /* Compare offers, details panel additions and guide cards */
-#tOffersCard>summary{cursor:pointer;font-size:13px;font-weight:600}
-#tOffersCard[open]>summary{margin-bottom:12px}
 #tOffers>.hint{margin:0}
 #tOffers>.offers-wrap+.hint{margin-top:12px}
 .offers-wrap{overflow-x:auto}
@@ -282,3 +278,12 @@ a.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font
 .gcard ul{padding-left:18px;margin-bottom:0}
 .gcard li+li{margin-top:4px}
 .gcard .toolbar{margin:0}
+.dlg.report{max-width:760px;max-height:100%;overflow:auto;padding:16px;gap:12px}
+.dlg-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+@media(max-width:420px){
+  #paneTracker .bar #tAdd{flex-basis:100%}
+  #paneTracker .bar .sp{display:none}
+  #paneTracker .bar .menu{flex:1}
+  #paneTracker .bar .menu>button{width:100%}
+  #tInsights .pop{left:0;right:auto}
+}

@@ -1044,6 +1044,7 @@ function renderStats(){
 /* Offers side by side: one column for each application whose status is Offer. */
 function renderOffers(){
   const list=T.filter(r=>r.status==='Offer');
+  $('#tOffersBtn').textContent='Compare offers'+(list.length?' ('+list.length+')':'');
   const lines=[['Role',r=>r.role],['Salary',r=>r.salary],['Benefits',r=>r.benefits],['Location',r=>r.location],['Work setup',r=>r.setup],['Resume sent',resumeName],['Notes',r=>r.notes]];
   $('#tOffers').innerHTML=list.length?`<div class="offers-wrap"><table class="offers" style="--offer-min:${list.length*160}px"><thead><tr><td></td>${list.map(r=>`<th scope="col">${esc(r.company||'[company]')}</th>`).join('')}</tr></thead><tbody>${lines.map(l=>`<tr><th scope="row">${l[0]}</th>${list.map(r=>{const v=String(l[1](r)||'').trim();return v?`<td>${esc(v)}</td>`:'<td class="none">Not recorded</td>';}).join('')}</tr>`).join('')}</tbody></table></div><p class="hint">${list.length<2?'Mark another application as Offer to compare them. ':''}Fill in salary, benefits, location and work setup under Details.</p>`:'<p class="hint">Offers appear here when you set an application\'s status to Offer.</p>';
 }
@@ -1159,6 +1160,21 @@ $('#tCsv').onclick=()=>{
   const rows=[cols.map(c=>c[0])].concat(T.map(r=>cols.map(c=>c[1]==='stage'?STAGES[furthest(r)]:c[1]==='resume'?resumeName(r):r[c[1]])));
   saveFile('job_applications.csv',rows.map(r=>r.map(q).join(',')).join('\r\n')+'\r\n');
 };
+
+/* Insights pop-ups: close with the button, Esc or a click outside. */
+let tDlg=null;
+function closeDialog(){if(!tDlg)return;tDlg.hidden=true;tDlg=null;$('#tInsightsBtn').focus();}
+function openDialog(sel){closeMenus();tDlg=$(sel);tDlg.hidden=false;tDlg.querySelector('[data-close]').focus();}
+$('#tStatsBtn').onclick=()=>openDialog('#tStatsDlg');
+$('#tOffersBtn').onclick=()=>openDialog('#tOffersDlg');
+['#tStatsDlg','#tOffersDlg'].forEach(sel=>$(sel).addEventListener('click',e=>{if(e.target===e.currentTarget||e.target.closest('[data-close]'))closeDialog();}));
+document.addEventListener('keydown',e=>{
+  if(!tDlg)return;
+  if(e.key==='Escape')closeDialog();
+  /* Close is the only control inside, so Tab stays on it. */
+  else if(e.key==='Tab'){e.preventDefault();tDlg.querySelector('[data-close]').focus();}
+});
+window.addEventListener('hashchange',closeDialog);
 
 /* CSV import: adds applications from a downloaded list or a spreadsheet. Existing ones are never changed. */
 function parseCsv(text){
