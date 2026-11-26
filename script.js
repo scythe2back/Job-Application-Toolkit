@@ -964,8 +964,8 @@ const longDate=iso=>iso?new Date(iso+'T00:00:00').toLocaleDateString('en-US',{ye
 const STAT=['Wishlist','Applied','Assessment','Interview','Final interview','Offer','Rejected','Withdrawn'];
 function tSample(){const t=todayISO();return[
   {id:uid(),company:'Sample Cyber Defense Corp.',role:'Junior Security Analyst',applied:addDays(t,-9),status:'Applied',follow:addDays(t,-2),notes:'Applied through the careers page',source:'Company careers page',location:'Makati City',setup:'Hybrid'},
-  {id:uid(),company:'Sample Bank Inc.',role:'SOC Analyst (L1)',applied:addDays(t,-4),status:'Interview',follow:addDays(t,3),interview:addDays(t,2)+'T10:00',notes:'Technical interview scheduled'},
-  {id:uid(),company:'Sample IT Services',role:'IT Security Technician',applied:addDays(t,-1),status:'Applied',follow:addDays(t,6),notes:''}];}
+  {id:uid(),company:'Sample Bank Inc.',role:'SOC Analyst (L1)',applied:addDays(t,-4),status:'Interview',follow:addDays(t,3),interview:addDays(t,2)+'T10:00',source:'JobStreet',notes:'Technical interview scheduled'},
+  {id:uid(),company:'Sample IT Services',role:'IT Security Technician',applied:addDays(t,-1),status:'Applied',follow:addDays(t,6),notes:'',source:'LinkedIn'}];}
 let T=null;try{T=JSON.parse(localStorage.getItem(TK)||'null');}catch(e){}
 if(!Array.isArray(T))T=[];
 const saveT=()=>{try{localStorage.setItem(TK,JSON.stringify(T));}catch(e){}};
@@ -985,6 +985,7 @@ function detailsHtml(r){
     ${inp('Where you found the job','source')}${inp('Salary or range','salary')}${inp('Location','location')}
     <label class="f"><span>Work setup</span><select data-t="setup">${SETUPS.map(x=>`<option value="${x}"${x===(r.setup||'')?' selected':''}>${x||'Not set'}</option>`).join('')}</select></label>
     ${inp('Contact person','contact')}${inp('Contact email or phone','contactInfo')}
+    ${STAGES.indexOf(r.status)<0?`<label class="f full"><span>Furthest stage reached (used in stats; correct it if needed)</span><select data-t="reached">${STAGES.map((x,i)=>`<option value="${i}"${i===furthest(r)?' selected':''}>${i?x:'Not sent'}</option>`).join('')}</select></label>`:''}
     <label class="f full"><span>Job posting (paste it here, since postings get taken down)</span><textarea data-t="posting" rows="6">${esc(r.posting)}</textarea></label></div></td></tr>`;
 }
 const detailsLabel=r=>(tOpen.has(r.id)?'Hide details':'Details')+(!tOpen.has(r.id)&&hasDetails(r)?' •':'');
@@ -997,7 +998,42 @@ function resetFilters(){tFilter='all';tQuery='';$('#tSearch').value='';}
 const upcoming=()=>T.filter(r=>r.interview&&r.interview.slice(0,10)>=todayISO()&&['Rejected','Withdrawn'].indexOf(r.status)<0).sort((a,b)=>a.interview.localeCompare(b.interview));
 const whenText=v=>new Date(v).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
 const showsInterview=r=>/interview/i.test(r.status)||!!r.interview;
+/* Stats. Each application keeps the furthest stage it reached, so a rejection after an interview still counts as an interview. */
+const STAGES=['Wishlist','Applied','Assessment','Interview','Final interview','Offer'];
+/* Status changes waiting to settle. Arrow keys on a dropdown pass through other stages, which must not be remembered. */
+const tPending={};
+function furthest(r){
+  const now=STAGES.indexOf(r.status);
+  const base=now>=0?now:r.reached!=null?Number(r.reached):r.applied?1:0;
+  return Math.max(base,r.interview?3:0);
+}
+function keepStages(){
+  let changed=false;
+  T.forEach(r=>{const now=STAGES.indexOf(r.status);if(now>=0&&!tPending[r.id]&&r.reached!==now){r.reached=now;changed=true;}});
+  if(changed)saveT();
+}
+function settleStage(r){
+  clearTimeout(tPending[r.id]);delete tPending[r.id];
+  if(STAGES.indexOf(r.status)>=0)tPending[r.id]=setTimeout(()=>{delete tPending[r.id];keepStages();},1500);
+}
+function tStats(list){
+  const make=name=>({name:name,sent:0,moved:0,interview:0,offer:0});
+  const all=make('All'),by={};
+  list.forEach(r=>{
+    const n=furthest(r);if(n<1)return;
+    const name=String(r.source||'').trim(),key=name.toLowerCase();
+    const g=by[key]||(by[key]=make(name||'Not recorded'));
+    [all,g].forEach(x=>{x.sent++;if(n>=2)x.moved++;if(n>=3)x.interview++;if(n>=5)x.offer++;});
+  });
+  return{all:all,sources:Object.values(by).sort((a,b)=>b.sent-a.sent||a.name.localeCompare(b.name))};
+}
+function renderStats(){
+  const s=tStats(T),cell=(n,of)=>`<td>${n} <small>(${Math.round(n/of*100)}%)</small></td>`;
+  const row=x=>`<tr><th scope="row">${esc(x.name)}</th><td>${x.sent}</td>${cell(x.moved,x.sent)}${cell(x.interview,x.sent)}${cell(x.offer,x.sent)}</tr>`;
+  $('#tStats').innerHTML=s.all.sent?`<div class="stats-wrap"><table class="stats"><thead><tr><th scope="col">Source</th><th scope="col">Sent</th><th scope="col">Moved forward</th><th scope="col">Interview</th><th scope="col">Offer</th></tr></thead><tbody>${s.sources.map(row).join('')}</tbody><tfoot>${row(s.all)}</tfoot></table></div><p class="hint" style="margin:8px 0 0">Counts every application you sent, whatever the filter. "Moved forward" means it reached Assessment or later. Add "Where you found the job" under Details to compare sources. With only a few applications, treat percentages as a rough guide.</p>`:'<p class="hint" style="margin:0">Stats appear once you have sent an application.</p>';
+}
 function renderSummary(){
+  keepStages();renderStats();
   const counts={};STAT.forEach(x=>{counts[x]=0;});T.forEach(r=>{counts[r.status]=(counts[r.status]||0)+1;});
   const due=T.filter(isDue).length;
   const chip=(key,label,cls)=>`<button type="button" class="badge ${cls||''}" data-tf="${key}" aria-pressed="${tFilter===key}">${label}</button>`;
@@ -1026,8 +1062,9 @@ $('#tTable').addEventListener('change',e=>{
   r[f]=e.target.value;if(f==='applied'&&e.target.value&&!r.follow)r.follow=addDays(e.target.value,7);
   saveT();
   /* Date fields fire "change" while a date is still being typed, so only update around them to keep the cursor in place. */
-  if(f==='status'){renderTracker();const n=$('#tTable tr[data-id="'+r.id+'"] [data-t="status"]');if(n)n.focus();}
-  else if(f==='applied'||f==='follow'||f==='interview'){renderSummary();paintRow(r);}
+  if(f==='status'){settleStage(r);renderTracker();const n=$('#tTable tr[data-id="'+r.id+'"] [data-t="status"]');if(n)n.focus();}
+  else if(f==='applied'||f==='follow'||f==='interview'||f==='reached'){renderSummary();paintRow(r);}
+  else if(f==='source')renderStats();
 });
 function paintRow(r){
   const tr=$('#tTable tr[data-id="'+r.id+'"]:not(.t-det)');if(!tr)return;
@@ -1102,8 +1139,8 @@ $('#tIcs').onclick=()=>{
 $('#tCsv').onclick=()=>{
   /* A leading =, +, - or @ gets an apostrophe so spreadsheets show it as text instead of running it as a formula. */
   const q=v=>'"'+String(v==null?'':v).replace(/^(?=[=+\-@\t\r])/,"'").replace(/"/g,'""')+'"';
-  const cols=[['Company','company'],['Role','role'],['Applied','applied'],['Status','status'],['Follow up','follow'],['Notes','notes'],['Interview','interview'],['Job link','jobUrl'],['Source','source'],['Salary','salary'],['Location','location'],['Work setup','setup'],['Contact','contact'],['Contact info','contactInfo'],['Job posting','posting']];
-  const rows=[cols.map(c=>c[0])].concat(T.map(r=>cols.map(c=>r[c[1]])));
+  const cols=[['Company','company'],['Role','role'],['Applied','applied'],['Status','status'],['Follow up','follow'],['Notes','notes'],['Interview','interview'],['Job link','jobUrl'],['Source','source'],['Salary','salary'],['Location','location'],['Work setup','setup'],['Contact','contact'],['Contact info','contactInfo'],['Job posting','posting'],['Furthest stage','stage']];
+  const rows=[cols.map(c=>c[0])].concat(T.map(r=>cols.map(c=>c[1]==='stage'?STAGES[furthest(r)]:r[c[1]])));
   saveFile('job_applications.csv',rows.map(r=>r.map(q).join(',')).join('\r\n')+'\r\n');
 };
 

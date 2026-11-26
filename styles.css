@@ -194,3 +194,14 @@ a.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font
 }
 @media(max-width:560px){#tSearch{order:3;flex-basis:100%}}
 @media(max-width:359px){.tt td.c-applied,.tt td.c-follow{grid-column:1/-1}}
+#tStatsCard>summary{cursor:pointer;font-size:13px;font-weight:600}
+#tStatsCard[open]>summary{margin-bottom:10px}
+.stats-wrap{overflow-x:auto}
+.stats{width:100%;max-width:760px;border-collapse:collapse;font-size:13px}
+.stats th,.stats td{padding:6px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}
+.stats th:first-child{text-align:left;overflow-wrap:anywhere}
+.stats thead th{font-size:11px;color:var(--mute)}
+.stats tfoot th,.stats tfoot td{font-weight:700}
+.stats small{color:var(--mute);white-space:nowrap}
+@media(max-width:560px){.stats{font-size:12px}.stats th,.stats td{padding:5px 3px}}
+@media(max-width:560px){.stats small{display:block}.stats thead th{font-size:10px}}
