@@ -102,26 +102,9 @@ details ul{margin:6px 0 0;padding-left:18px}
 .mail{border:1px solid var(--line);border-radius:8px;background:var(--card);overflow:hidden}
 .mrow{padding:8px 12px;border-bottom:1px solid var(--line);font-size:13px;word-break:break-word}
 .mbody{padding:12px;white-space:pre-wrap;font-size:14px;line-height:1.55}
-.tt{width:100%;border-collapse:collapse;font-size:13px}
-.tt th{text-align:left;font-size:11px;font-weight:600;color:var(--mute);padding:6px;border-bottom:1px solid var(--line);white-space:nowrap}
-.tt td{padding:4px;border-bottom:1px solid var(--line);vertical-align:middle}
-.tt input,.tt select{padding:4px 6px;font-size:13px;min-height:30px}
-.tt tr.due td{background:var(--due)}
 .badge{display:inline-block;font-size:11px;font-weight:600;padding:1px 8px;border-radius:999px;background:var(--acc-soft);color:var(--acc);white-space:nowrap}
 .badge.due{background:var(--due);color:var(--warn)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
-#tSearch{width:260px;max-width:100%}
-.tt input[type="datetime-local"]{display:block;margin-top:4px}
-.tt input:not([type]){min-width:130px}
-.t-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:4px;min-width:240px}
-.t-actions button{white-space:nowrap}
-.t-det input:not([type]){min-width:0}
-.tt tr.t-det>td{background:var(--sunk);padding:12px}
-.t-det .grid{max-width:760px}
-.t-det .grid>.full{grid-column:1/-1}
-.t-link:empty{display:none}
-.upcoming{margin-bottom:10px;font-size:13px}
-.upcoming ul{margin:4px 0 0;padding-left:18px}
 .pre{white-space:pre-wrap;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--sunk);border:1px solid var(--line);border-radius:6px;padding:10px;max-height:420px;overflow:auto}
 .qcard{border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px;background:var(--sunk)}
 .qcard .cat{font-size:11px;color:var(--acc);font-weight:600}
@@ -163,45 +146,6 @@ a.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font
   h1 .wm span{display:none}
 }
 @media(max-width:560px){.grid{grid-template-columns:1fr}input,textarea,select{font-size:16px}}
-/* Tracker on narrow screens: each application becomes a card, so nothing scrolls sideways. */
-@media(max-width:900px){
-  #paneTracker .bar .sp{order:1}
-  #paneTracker .bar .menu{order:2}
-  .tt,.tt tbody{display:block}
-  .tt thead{display:none}
-  .tt tbody tr:not(.t-det){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding:12px;border:1px solid var(--line);border-radius:8px;margin-top:10px}
-  .tt tbody tr:first-child{margin-top:0}
-  .tt tbody tr.due{background:var(--due)}
-  .tt tbody tr>td,.tt tr.due td{display:block;min-width:0;padding:0;border:0;background:none}
-  .tt td[data-label]::before{content:attr(data-label);display:block;margin-bottom:2px;font-size:11px;font-weight:600;color:var(--mute)}
-  .tt td.c-wide{grid-column:1/-1}
-  /* Status comes before the two dates, so the dates sit side by side. */
-  .tt td.c-applied,.tt td.c-follow{order:1}
-  .tt td.c-wide:nth-child(n+6){order:2}
-  .tt input,.tt select{min-width:0;min-height:40px;font-size:16px}
-  .tt input:not([type]){min-width:0}
-  .t-actions{min-width:0;justify-content:flex-start;gap:8px}
-  .t-actions button{min-height:40px}
-  .t-actions .t-due{display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:100%}
-  .t-actions .t-due:empty{display:none}
-  .t-actions [data-ta="del"]{margin-left:auto;min-width:40px}
-  .tt tbody tr.t-det{display:block;border:1px solid var(--line);border-top:0;border-radius:0 0 8px 8px;background:var(--sunk)}
-  .tt tbody tr.t-det>td{padding:12px}
-  .tt tbody tr:has(+tr.t-det){border-radius:8px 8px 0 0}
-}
-@media(max-width:560px){#tSearch{order:3;flex-basis:100%}}
-@media(max-width:359px){.tt td.c-applied,.tt td.c-follow{grid-column:1/-1}}
-#tStatsCard>summary{cursor:pointer;font-size:13px;font-weight:600}
-#tStatsCard[open]>summary{margin-bottom:10px}
-.stats-wrap{overflow-x:auto}
-.stats{width:100%;max-width:760px;border-collapse:collapse;font-size:13px}
-.stats th,.stats td{padding:6px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}
-.stats th:first-child{text-align:left;overflow-wrap:anywhere}
-.stats thead th{font-size:11px;color:var(--mute)}
-.stats tfoot th,.stats tfoot td{font-weight:700}
-.stats small{color:var(--mute);white-space:nowrap}
-@media(max-width:560px){.stats{font-size:12px}.stats th,.stats td{padding:5px 3px}}
-@media(max-width:560px){.stats small{display:block}.stats thead th{font-size:10px}}
 /* Tracker status filters. --neon is the bright color; --ink-on is the darker text that stays readable on white. */
 .chips button.badge{--neon:#f5f5f5;--ink-on:#333333;--chip-text:var(--ink-on);--chip-line:var(--neon);min-height:28px;padding:0 10px;font-family:inherit;color:var(--chip-text);border:1px solid var(--chip-line);background:color-mix(in srgb,var(--neon) 14%,transparent)}
 .chips [data-tf="all"]{--chip-line:#9a9a9a}
@@ -219,3 +163,99 @@ a.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font
 .chips button.badge[aria-pressed="true"]{background:var(--neon);color:#111;border-color:var(--chip-text);box-shadow:0 0 0 1px var(--chip-text),0 0 8px var(--neon)}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .chips button.badge{--chip-text:var(--neon);--chip-line:var(--neon)}}
 :root[data-theme="dark"] .chips button.badge{--chip-text:var(--neon);--chip-line:var(--neon)}
+/* ===== Tracker layout. Spacing: 8px inside groups, 12px between groups, 16px card padding. ===== */
+#paneTracker .card{padding:16px}
+#paneTracker .bar button,#tSearch{height:36px;min-height:36px}
+#tSearch{width:260px;max-width:100%}
+.upcoming{margin-bottom:12px;font-size:13px}
+.upcoming ul{list-style:none;margin:4px 0 0;padding:0}
+#tSummary>.hint{margin:12px 0 0}
+#tStatsCard>summary{cursor:pointer;font-size:13px;font-weight:600}
+#tStatsCard[open]>summary{margin-bottom:12px}
+#tStats>.hint:not(:only-child){margin-top:12px!important}
+.stats-wrap{overflow-x:auto}
+.stats{width:100%;table-layout:fixed;border-collapse:collapse;font-size:13px}
+.stats th,.stats td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}
+.stats th:first-child{width:32%;padding-left:0;text-align:left;overflow-wrap:anywhere}
+.stats th:last-child,.stats td:last-child{padding-right:0}
+.stats thead th{font-size:11px;color:var(--mute)}
+.stats tfoot th,.stats tfoot td{font-weight:700;border-bottom:0}
+.stats small{color:var(--mute);white-space:nowrap}
+/* Applications: fields share one set of columns, and the buttons get their own line underneath. */
+#tTable>.hint:only-child{margin:0}
+.tt,.tt thead,.tt tbody{display:block;width:100%;font-size:13px}
+.tt tr{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1.2fr) 148px 200px 148px minmax(0,1.4fr);gap:8px;align-items:start}
+.tt th{padding:0 0 8px;text-align:left;font-size:11px;font-weight:600;color:var(--mute);white-space:nowrap}
+.tt th:last-child{display:none}
+.tt thead tr{padding:0 8px;border-bottom:1px solid var(--line)}
+.tt td{display:block;min-width:0;padding:0}
+.tt input,.tt select{height:34px;min-height:34px;padding:4px 8px;font-size:13px}
+.tt input[type="datetime-local"]{display:block;margin-top:8px}
+.tt tbody tr{padding:12px 8px;border-bottom:1px solid var(--line)}
+.tt tbody tr:last-child{border-bottom:0}
+.tt tbody tr.due{background:var(--due)}
+.tt td.c-actions{grid-column:1/-1}
+.t-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px}
+.t-actions button{white-space:nowrap}
+.t-actions [data-ta="details"]{min-width:112px}
+.t-actions [data-ta="del"]{min-width:34px;padding:0}
+.t-due{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-right:auto}
+.tt tbody tr:has(+tr.t-det){border-bottom:0}
+.tt tbody tr.t-det{display:block;padding:16px;background:var(--sunk)}
+.t-det .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.t-det .grid>.full{grid-column:1/-1}
+.t-det textarea{height:auto}
+.t-link:empty{display:none}
+@media(max-width:1100px){
+  .tt tr{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 132px 192px 132px minmax(0,1fr)}
+}
+@media(max-width:980px){
+  #paneTracker .chips{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+}
+/* The interview time sits beside the buttons, so these rows are as tall as the others. */
+@media(min-width:1040px){
+  .tt tbody tr:not(.due):has([data-t="interview"])>td:nth-child(1){grid-column:1;grid-row:1}
+  .tt tbody tr:not(.due):has([data-t="interview"])>td:nth-child(2){grid-column:2;grid-row:1}
+  .tt tbody tr:not(.due):has([data-t="interview"])>td:nth-child(3){grid-column:3;grid-row:1}
+  .tt tbody tr:not(.due):has([data-t="interview"])>.c-status{grid-column:4;grid-row:1/span 2}
+  .tt tbody tr:not(.due):has([data-t="interview"])>.c-follow{grid-column:5;grid-row:1}
+  .tt tbody tr:not(.due):has([data-t="interview"])>td:nth-child(5)+td{grid-column:6;grid-row:1}
+  .tt tbody tr:not(.due):has([data-t="interview"])>.c-actions{grid-column:5/-1;grid-row:2}
+}
+/* Narrow screens: each application becomes a card, so nothing scrolls sideways. */
+@media(max-width:900px){
+  #paneTracker .bar .sp{order:1}
+  #paneTracker .bar .menu{order:2}
+  #tCard:has(.tt){padding:0;border:0;background:none}
+  .tt thead{display:none}
+  .tt tbody tr:not(.t-det){grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;padding:16px;border:1px solid var(--line);border-radius:10px;margin-top:12px;background:var(--card)}
+  .tt tbody tr:first-child:not(.t-det){margin-top:0}
+  .tt tbody tr.due:not(.t-det){background:var(--due)}
+  .tt td[data-label]::before{content:attr(data-label);display:block;margin-bottom:4px;font-size:11px;font-weight:600;color:var(--mute)}
+  .tt td.c-wide{grid-column:1/-1}
+  /* Status comes before the two dates, so the dates sit side by side. */
+  .tt td.c-applied,.tt td.c-follow{order:1}
+  .tt td.c-wide:nth-child(n+6){order:2}
+  .tt input,.tt select{height:40px;min-height:40px;font-size:16px}
+  .t-actions button{height:40px;min-height:40px}
+  .t-actions [data-ta="details"]{min-width:0}
+  .t-actions [data-ta="del"]{min-width:40px;margin-left:auto}
+  .t-due{width:100%}
+  .t-due:empty{display:none}
+  .t-det .grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .tt tbody tr.t-det{border:1px solid var(--line);border-top:0;border-radius:0 0 10px 10px}
+  .tt tbody tr:has(+tr.t-det):not(.t-det){border-radius:10px 10px 0 0;border-bottom:1px solid var(--line)}
+}
+@media(max-width:560px){
+  #tSearch{order:3;flex-basis:100%}
+  #paneTracker .chips{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .t-det .grid{grid-template-columns:minmax(0,1fr)}
+  .stats{table-layout:auto;font-size:12px}
+  .stats th,.stats td{padding:5px 3px}
+  .stats th:first-child{width:auto}
+  .stats thead th{font-size:10px}
+  .stats small{display:block}
+}
+@media(max-width:359px){
+  .tt td.c-applied,.tt td.c-follow{grid-column:1/-1}
+}
