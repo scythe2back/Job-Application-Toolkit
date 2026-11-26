@@ -1036,7 +1036,7 @@ function renderSummary(){
   keepStages();renderStats();
   const counts={};STAT.forEach(x=>{counts[x]=0;});T.forEach(r=>{counts[r.status]=(counts[r.status]||0)+1;});
   const due=T.filter(isDue).length;
-  const chip=(key,label,cls)=>`<button type="button" class="badge ${cls||''}" data-tf="${key}" aria-pressed="${tFilter===key}">${label}</button>`;
+  const chip=(key,label,cls)=>`<button type="button" class="badge ${cls||''}${label.endsWith(': 0')?' zero':''}" data-tf="${key}" aria-pressed="${tFilter===key}">${label}</button>`;
   const next=upcoming();
   const soon=next.length?`<div class="upcoming"><b>Upcoming interviews</b><ul>${next.map(r=>`<li><b>${esc(whenText(r.interview))}</b> &ndash; ${esc(r.company||'[company]')}${r.role?' ('+esc(r.role)+')':''}</li>`).join('')}</ul></div>`:'';
   $('#tSummary').innerHTML=soon+`<div class="chips" role="group" aria-label="Filter by status">${chip('all','All: '+T.length)}${STAT.map(x=>chip(x,x+': '+counts[x])).join('')}${chip('due','Follow-ups due: '+due,due?'due':'')}</div><p class="hint" style="margin:8px 0 0">Click a count to filter the list. Follow-up dates default to one week after you apply. Rows turn orange when a follow-up is due. This list is saved in this browser only, so download the .csv now and then as a backup.</p>`;
